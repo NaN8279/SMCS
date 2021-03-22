@@ -2,13 +2,8 @@ plugins {
     id 'application'
 }
 
-
 repositories {
     jcenter()
-}
-
-dependencies {
-    implementation files("libs/minecraft-server.jar")
 }
 
 jar {

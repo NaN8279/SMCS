@@ -169,7 +169,6 @@ class TickPlayer extends Thread {
                 return;
             }
 
-            ServerBoundPacket packetToSend;
             try {
                 player.handlePackets();
             } catch (ClientDisconnectedException e) {
