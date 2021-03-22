@@ -36,8 +36,8 @@ class InitializeClient extends Thread{
         try {
             ServerIdentificationPacket identificationPacket = new ServerIdentificationPacket(
                     (byte) 7,
-                    "SMCP",
-                    "Loading...",
+                    server.getName(),
+                    server.getMOTD(),
                     false
             );
 
@@ -125,17 +125,30 @@ class CheckForNewClients extends Thread{
 }
 
 public class Server {
-    final private int port = 25565;
+    final private int port;
     final private ArrayList<NPC> onlinePlayers = new ArrayList<>();
     final private Logger logger = new Logger();
     final private ServerLevel level;
     final private EventManager eventManager = new EventManager();
     final private ArrayList<String> bannedPeople = new ArrayList<>();
+    final private String name;
+    final private String MOTD;
     private boolean stopping = false;
     private CheckForNewClients clientsThread;
 
-    public Server(ServerLevel lvl){
+    public Server(ServerLevel lvl, int port, String name, String MOTD){
+        this.port = port;
+        this.name = name;
+        this.MOTD = MOTD;
         level = lvl;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getMOTD() {
+        return MOTD;
     }
 
     public void ban(String playerName, String reason) throws StringToBigToConvertException {

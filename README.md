@@ -17,6 +17,10 @@ Type /help in-game to get a list of available commands.
 
 Some commands require operator status. You can give operator to a player by listing them in the `operators.txt` file in the server directory.
 
+# Config
+
+The anticheats are by default all disabled. They can be enabled in the server config file (`server.properties`), which can be found in the server directory.
+
 # Technical information
 
 ## Ticks
