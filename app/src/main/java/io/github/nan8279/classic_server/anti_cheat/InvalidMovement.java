@@ -19,7 +19,11 @@ public class InvalidMovement implements EventHandler {
             BlockPosition newPosition = BlockPosition.fromPlayerPosition(((PlayerMoveEvent) event).getNewPosition());
 
             if (isInvalidBlock(event.getPlayer().getServer().getLevel().getBlock(newPosition))) {
-                ((PlayerMoveEvent) event).setCancelled(true);
+                BlockPosition highestBlockPosition = event.getPlayer().getServer().getLevel().
+                        getHighestBlockPosition(newPosition.getPosX(), newPosition.getPosZ());
+
+                ((PlayerMoveEvent) event).setNewPosition(
+                        PlayerPosition.fromBlockPosition(highestBlockPosition));
             }
 
             if (isFlying((PlayerMoveEvent) event)) {

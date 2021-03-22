@@ -14,7 +14,7 @@ public class InvalidClient implements EventHandler {
             assert event.getPacket() instanceof PlayerIdentificationPacket;
             if (((PlayerIdentificationPacket) event.getPacket()).getUnusedByte() == 66) {
                 try {
-                    event.getPlayer().disconnect("client not allowed!", false);
+                    event.getPlayer().disconnect("Client not allowed!", false);
                 } catch (StringToBigToConvertException ignored) {}
             }
         }

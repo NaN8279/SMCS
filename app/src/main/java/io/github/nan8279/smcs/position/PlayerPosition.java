@@ -39,7 +39,7 @@ public class PlayerPosition {
     public static PlayerPosition fromBlockPosition(BlockPosition position) {
         return new PlayerPosition(
                 position.getPosX() + 0.5,
-                position.getPosY(),
+                position.getPosY() + 0.5,
                 position.getPosZ() + 0.5,
                 (byte) 0,
                 (byte) 0);

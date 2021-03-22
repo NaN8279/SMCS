@@ -1,9 +1,6 @@
 package io.github.nan8279.classic_server;
 
-import io.github.nan8279.classic_server.anti_cheat.AntiBlockSpam;
-import io.github.nan8279.classic_server.anti_cheat.AntiSpam;
-import io.github.nan8279.classic_server.anti_cheat.InvalidBlock;
-import io.github.nan8279.classic_server.anti_cheat.InvalidMovement;
+import io.github.nan8279.classic_server.anti_cheat.*;
 import io.github.nan8279.classic_server.commands.MessageHandler;
 import io.github.nan8279.config.FileConfig;
 import io.github.nan8279.smcs.level.ServerLevel;
@@ -39,7 +36,7 @@ public class Main {
         }
 
         server.getEventManager().addEventHandler(new InvalidMovement());
-        // server.getEventManager().addEventHandler(new InvalidClient());
+        server.getEventManager().addEventHandler(new InvalidClient());
         server.getEventManager().addEventHandler(new InvalidBlock());
         server.getEventManager().addEventHandler(new MessageHandler());
         server.getEventManager().addEventHandler(new AntiSpam());
