@@ -1,6 +1,6 @@
 package io.github.nan8279.smcs.server;
 
-import io.github.nan8279.smcs.config.Message;
+import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.event_manager.EventManager;
 import io.github.nan8279.smcs.event_manager.events.PlayerJoinEvent;
 import io.github.nan8279.smcs.exceptions.*;
@@ -48,6 +48,11 @@ class InitializeClient extends Thread{
                 }
             }
 
+            if (server.getBannedPeople().contains(player.getUsername())) {
+                player.disconnect("You are banned.", true);
+                return;
+            }
+
             player.send(identificationPacket);
             server.getLevel().sendWorldData(player);
 
@@ -59,7 +64,7 @@ class InitializeClient extends Thread{
             PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(player, joinPacket);
             server.getEventManager().runEvent(playerJoinEvent);
         } catch (ClientDisconnectedException | StringToBigToConvertException exception) {
-            server.getLogger().error("Couldn't send initialize packets to player" + player.getUsername(),
+            server.getLogger().error("Couldn't send initialize packets to player " + player.getUsername(),
                     exception);
         }
     }
@@ -125,6 +130,7 @@ public class Server {
     final private Logger logger = new Logger();
     final private ServerLevel level;
     final private EventManager eventManager = new EventManager();
+    final private ArrayList<String> bannedPeople = new ArrayList<>();
     private boolean stopping = false;
     private CheckForNewClients clientsThread;
 
@@ -132,8 +138,23 @@ public class Server {
         level = lvl;
     }
 
-    public int getPort() {
-        return port;
+    public void ban(String playerName, String reason) throws StringToBigToConvertException {
+        for (int i = 0; i < onlinePlayers.size(); i++) {
+            NPC player = onlinePlayers.get(i);
+            if (!(player instanceof Player)) {
+                continue;
+            }
+
+            if (player.getUsername().equals(playerName)) {
+                player.disconnect(reason, false);
+            }
+        }
+
+        bannedPeople.add(playerName);
+    }
+
+    public ArrayList<String> getBannedPeople() {
+        return bannedPeople;
     }
 
     public ArrayList<NPC> getOnlinePlayers() {
@@ -210,7 +231,7 @@ public class Server {
         if (!silent) {
             logger.info(npc.getUsername() + " left: " + reason);
             try {
-                sendToAllClients(new ServerMessagePacket(Message.generateLeaveMessage(npc, reason)));
+                sendToAllClients(new ServerMessagePacket(Config.generateLeaveMessage(npc, reason)));
             } catch (StringToBigToConvertException ignored) {}
         }
     }
@@ -250,5 +271,7 @@ public class Server {
                 player.tick();
             }
         } catch (ConcurrentModificationException ignored) {}
+
+        level.randomTick(this);
     }
 }

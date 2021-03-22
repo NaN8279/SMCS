@@ -1,5 +1,6 @@
 package io.github.nan8279.smcs.level;
 
+import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
 import io.github.nan8279.smcs.exceptions.ByteArrayToBigToConvertException;
 import io.github.nan8279.smcs.exceptions.ClientDisconnectedException;
@@ -8,11 +9,15 @@ import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.LevelDataChunkPacket;
 import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.LevelFinalizePacket;
 import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.LevelInitializePacket;
+import io.github.nan8279.smcs.player.NPC;
 import io.github.nan8279.smcs.player.Player;
 import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.position.PlayerPosition;
+import io.github.nan8279.smcs.server.Server;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.GZIPOutputStream;
 
 public class ServerLevel {
@@ -40,6 +45,43 @@ public class ServerLevel {
 
     public int getLevelDepth() {
         return levelDepth;
+    }
+
+    public void randomTick(Server server) {
+        ArrayList<BlockPosition> randomBlockPositions = new ArrayList<>();
+
+        int xChunks = getLevelWidth() / 16;
+        int yChunks = getLevelHeight() / 16;
+        int zChunks = getLevelDepth() / 16;
+
+        int blocksToSelect = Config.randomTickSpeed * (xChunks + yChunks + zChunks);
+
+        for (int i = 0; i < server.getOnlinePlayers().size(); i++) {
+            NPC onlinePlayer = server.getOnlinePlayers().get(i);
+            if (onlinePlayer instanceof Player) {
+                int minPosX = (int) (onlinePlayer.getPos().getPosX() - 32);
+                int maxPosX = (int) (onlinePlayer.getPos().getPosX() + 32);
+                int minPosZ = (int) (onlinePlayer.getPos().getPosZ() - 32);
+                int maxPosZ = (int) (onlinePlayer.getPos().getPosZ() + 32);
+
+                for (int j = 0; j < blocksToSelect; j++) {
+                    short randomX = (short) ThreadLocalRandom.current().nextInt(minPosX, maxPosX);
+                    short randomY = (short) ThreadLocalRandom.current().nextInt(getLevelHeight());
+                    short randomZ = (short) ThreadLocalRandom.current().nextInt(minPosZ, maxPosZ);
+                    BlockPosition randomBlockPosition = new BlockPosition(randomX, randomY, randomZ);
+
+                    if (getBlock(randomBlockPosition) != Block.AIR) {
+                        randomBlockPositions.add(randomBlockPosition);
+                    }
+                }
+            }
+        }
+
+        for (BlockPosition blockPosition : randomBlockPositions) {
+            if (getBlock(blockPosition).randomTick != null) {
+                getBlock(blockPosition).randomTick.updateBlock(server, blockPosition);
+            }
+        }
     }
 
     public PlayerPosition getSpawnPos() {

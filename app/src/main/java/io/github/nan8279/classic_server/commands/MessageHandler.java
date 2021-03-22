@@ -11,7 +11,7 @@ public class MessageHandler implements EventHandler {
         if (event instanceof MessageEvent) {
             if (((MessageEvent) event).getMessage().startsWith("/")) {
                 ((MessageEvent) event).setCanceled(true);
-                Commands.executeCommand((MessageEvent) event);
+                Command.executeCommand((MessageEvent) event);
             }
         }
     }

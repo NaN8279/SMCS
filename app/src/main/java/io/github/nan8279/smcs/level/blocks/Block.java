@@ -5,12 +5,15 @@ import io.github.nan8279.smcs.level.physics.DoubleSlabPhysic;
 import io.github.nan8279.smcs.level.physics.FlowerPhysic;
 import io.github.nan8279.smcs.level.physics.Physic;
 import io.github.nan8279.smcs.level.physics.SandPhysic;
+import io.github.nan8279.smcs.level.physics.random_tick.DirtRandomTick;
+import io.github.nan8279.smcs.level.physics.random_tick.GrassRandomTick;
+import io.github.nan8279.smcs.level.physics.random_tick.RandomTick;
 
 public enum Block {
     AIR(0, null, false),
     STONE(1),
-    GRASS(2),
-    DIRT(3),
+    GRASS(2, null, true, new GrassRandomTick()),
+    DIRT(3, null, true, new DirtRandomTick()),
     COBBLESTONE(4),
     PLANKS(5),
     SAPLING(6, new FlowerPhysic(), false),
@@ -43,26 +46,37 @@ public enum Block {
     MOSSY_COBBLESTONE(48),
     OBSIDIAN(49);
 
-    final public byte blockID;
+    final public RandomTick randomTick;
     final public Physic physic;
     final public boolean solid;
+    final public byte blockID;
+
+    Block(int blockID, Physic physic, boolean solid, RandomTick randomTick) {
+        this.blockID = (byte) blockID;
+        this.physic = physic;
+        this.solid = solid;
+        this.randomTick = randomTick;
+    }
 
     Block(int blockID, Physic physic, boolean solid) {
         this.blockID = (byte) blockID;
         this.physic = physic;
         this.solid = solid;
+        this.randomTick = null;
     }
 
     Block(int blockID, Physic physic) {
         this.blockID = (byte) blockID;
         this.physic = physic;
         solid = true;
+        this.randomTick = null;
     }
 
     Block(int blockID) {
         this.blockID = (byte) blockID;
         this.physic = null;
         solid = true;
+        this.randomTick = null;
     }
 
     public static Block fromID(int blockID) throws InvalidBlockIDException {

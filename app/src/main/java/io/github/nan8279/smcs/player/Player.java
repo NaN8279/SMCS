@@ -1,6 +1,6 @@
 package io.github.nan8279.smcs.player;
 
-import io.github.nan8279.smcs.config.Message;
+import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.event_manager.events.MessageEvent;
 import io.github.nan8279.smcs.event_manager.events.PlayerMoveEvent;
 import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
@@ -40,7 +40,7 @@ public class Player extends NPC {
     }
 
     public String getJoinMessage() {
-        return Message.generateJoinMessage(this);
+        return Config.generateJoinMessage(this);
     }
 
     public void send(ServerBoundPacket p) throws ClientDisconnectedException {
@@ -98,7 +98,7 @@ public class Player extends NPC {
 
             getServer().getEventManager().runEvent(messageEvent);
             if (!messageEvent.isCanceled()) {
-                getServer().sendMessage(Message.generateChatMessage(this, messageEvent.getMessage()));
+                getServer().sendMessage(Config.generateChatMessage(this, messageEvent.getMessage()));
             }
         }
 
@@ -124,7 +124,7 @@ public class Player extends NPC {
     public void disconnect(String reason, boolean silent) throws StringToBigToConvertException {
         try {
             if (socket.getInetAddress().isReachable(3000)) {
-                send(new DisconnectPlayerPacket(Message.generateKickMessage(reason)));
+                send(new DisconnectPlayerPacket(Config.generateKickMessage(reason)));
                 socket.close();
             }
             getServer().removePlayer(this, reason, silent);
@@ -164,7 +164,7 @@ class TickPlayer extends Thread {
                 player.send(new PingPacket());
             } catch (ClientDisconnectedException e) {
                 try {
-                    player.disconnect(Message.DEFAULT_DISCONNECT_REASON.toString(), false);
+                    player.disconnect(Config.DEFAULT_DISCONNECT_REASON, false);
                 } catch (StringToBigToConvertException ignored){}
                 return;
             }
@@ -173,7 +173,7 @@ class TickPlayer extends Thread {
                 player.handlePackets();
             } catch (ClientDisconnectedException e) {
                 try {
-                    player.disconnect(Message.DEFAULT_DISCONNECT_REASON.toString(), false);
+                    player.disconnect(Config.DEFAULT_DISCONNECT_REASON, false);
                 } catch (StringToBigToConvertException ignored){}
                 return;
             }

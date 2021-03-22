@@ -1,8 +1,8 @@
 package io.github.nan8279.classic_server;
 
 import io.github.nan8279.classic_server.anti_cheat.*;
+import io.github.nan8279.classic_server.commands.Command;
 import io.github.nan8279.classic_server.commands.MessageHandler;
-import io.github.nan8279.config.FileConfig;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.position.BlockPosition;
@@ -20,16 +20,23 @@ public class Main {
 
         Server server = new Server(level);
 
-        FileConfig config = new FileConfig();
-        config.addValue("check-invalid-movement", false);
-        config.addValue("check-invalid-client", false);
-        config.addValue("check-invalid-block-placement", false);
-
-        if (!Files.exists(Path.of("./server-config.txt"))) {
+        if (!Files.exists(Path.of("./operators.txt"))) {
             try {
-                config.write("./server-config.txt");
+                Files.writeString(Path.of("./operators.txt"), "");
             } catch (IOException exception) {
-                System.out.println("Couldn't write config file!");
+                System.out.println("Error while writing to operators file!");
+                exception.printStackTrace();
+                return;
+            }
+        } else {
+            try {
+                String operators = Files.readString(Path.of("./operators.txt"));
+
+                for (String operator : operators.split("\n")) {
+                    Command.addOperator(operator);
+                }
+            } catch (IOException exception) {
+                System.out.println("Error while reading operators file!");
                 exception.printStackTrace();
                 return;
             }
