@@ -1,9 +1,10 @@
 package io.github.nan8279.classic_server;
 
-import io.github.nan8279.classic_server.anti_cheat.*;
+import io.github.nan8279.classic_server.anti_cheat.AntiCheat;
 import io.github.nan8279.classic_server.commands.Command;
 import io.github.nan8279.classic_server.commands.MessageHandler;
 import io.github.nan8279.classic_server.config.FileConfig;
+import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.position.BlockPosition;
@@ -16,6 +17,29 @@ import java.util.HashMap;
 
 public class Main {
 
+    private static FileConfig generateConfig(int port, String serverName, String MOTD) {
+        FileConfig config = new FileConfig();
+
+        AntiCheat.addToConfig(config);
+        config.addValue("server-port", port);
+        config.addValue("server-name", serverName);
+        config.addValue("server-motd", MOTD);
+        Config.addToConfig(config);
+
+        return config;
+    }
+
+    private static Server readConfigFile(HashMap<String, Object> config, ServerLevel level) {
+
+        Server server = new Server(level, (int) config.get("server-port"),
+                (String) config.get("server-name"), (String) config.get("server-motd"));
+
+        AntiCheat.addEventHandlers(config, server);
+        Config.readFromConfig(config);
+
+        return server;
+    }
+
     public Main() {
         ServerLevel level = ServerLevel.generateFlatWorld(new BlockPosition((short) 1, (short) 127, (short) 1),
                 (short) 255, (short) 255, (short) 255, Block.STONE);
@@ -23,6 +47,8 @@ public class Main {
         String serverName = "My Minecraft server.";
         String MOTD = "Powered by SMCS";
         int port = 25565;
+
+        FileConfig config = generateConfig(port, serverName, MOTD);
 
         Server server;
 
@@ -48,21 +74,6 @@ public class Main {
             }
         }
 
-        FileConfig config = new FileConfig();
-
-        config.addValue("check-invalid-movement", false,
-                "Stops players from flying or noclipping.");
-        config.addValue("check-invalid-client", false,
-                "Stops players from joining with hacked clients.");
-        config.addValue("check-invalid-block", false,
-                "Stops players from placing blocks to far from their position or placing blocks like bedrock.");
-        config.addValue("anti-chat-spam", false, "Stops players from spamming in chat.");
-        config.addValue("anti-block-spam", false,
-                "Stops players from breaking or placing too much blocks.");
-
-        config.addValue("server-port", port);
-        config.addValue("server-name", serverName);
-        config.addValue("server-motd", MOTD);
 
         if (!Files.exists(Path.of("./server.properties"))) {
             try {
@@ -73,39 +84,10 @@ public class Main {
                 exception.printStackTrace();
                 return;
             }
-
-            server.getEventManager().addEventHandler(new InvalidMovement());
-            server.getEventManager().addEventHandler(new InvalidClient());
-            server.getEventManager().addEventHandler(new InvalidBlock());
-            server.getEventManager().addEventHandler(new MessageHandler());
-            server.getEventManager().addEventHandler(new AntiSpam());
-            server.getEventManager().addEventHandler(new AntiBlockSpam());
         } else {
             try {
                 HashMap<String, Object> readConfig = config.read("./server.properties");
-
-                server = new Server(level, (int) readConfig.get("server-port"),
-                        (String) readConfig.get("server-name"), (String) readConfig.get("server-motd"));
-
-                if ((boolean) readConfig.get("check-invalid-movement")) {
-                    server.getEventManager().addEventHandler(new InvalidMovement());
-                }
-
-                if ((boolean) readConfig.get("check-invalid-client")) {
-                    server.getEventManager().addEventHandler(new InvalidClient());
-                }
-
-                if ((boolean) readConfig.get("check-invalid-block")) {
-                    server.getEventManager().addEventHandler(new InvalidBlock());
-                }
-
-                if ((boolean) readConfig.get("anti-chat-spam")) {
-                    server.getEventManager().addEventHandler(new AntiSpam());
-                }
-
-                if ((boolean) readConfig.get("anti-block-spam")) {
-                    server.getEventManager().addEventHandler(new AntiBlockSpam());
-                }
+                server = readConfigFile(readConfig, level);
             } catch (Exception exception) {
                 System.out.println("Error while reading config file!");
                 exception.printStackTrace();
@@ -113,6 +95,7 @@ public class Main {
             }
         }
 
+        server.getEventManager().addEventHandler(new MessageHandler());
         server.run();
 
         while (!server.isStopping()) {

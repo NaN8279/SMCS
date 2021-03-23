@@ -8,6 +8,7 @@ import io.github.nan8279.smcs.level.physics.SandPhysic;
 import io.github.nan8279.smcs.level.physics.random_tick.DirtRandomTick;
 import io.github.nan8279.smcs.level.physics.random_tick.GrassRandomTick;
 import io.github.nan8279.smcs.level.physics.random_tick.RandomTick;
+import io.github.nan8279.smcs.level.physics.random_tick.SaplingRandomTick;
 
 public enum Block {
     AIR(0, null, false),
@@ -16,7 +17,7 @@ public enum Block {
     DIRT(3, null, true, new DirtRandomTick()),
     COBBLESTONE(4),
     PLANKS(5),
-    SAPLING(6, new FlowerPhysic(), false),
+    SAPLING(6, new FlowerPhysic(), false, new SaplingRandomTick()),
     BEDROCK(7),
     WATER(8, null, false),
     STATIONARY_WATER(9, null, false),

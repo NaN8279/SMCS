@@ -54,7 +54,7 @@ public class ServerLevel {
         int yChunks = getLevelHeight() / 16;
         int zChunks = getLevelDepth() / 16;
 
-        int blocksToSelect = Config.randomTickSpeed * (xChunks + yChunks + zChunks);
+        int blocksToSelect = Config.RANDOM_TICK_SPEED * (xChunks + yChunks + zChunks);
 
         for (int i = 0; i < server.getOnlinePlayers().size(); i++) {
             NPC onlinePlayer = server.getOnlinePlayers().get(i);

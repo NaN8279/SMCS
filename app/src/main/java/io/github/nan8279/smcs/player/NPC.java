@@ -38,9 +38,7 @@ public class NPC {
     }
 
     public void disconnect(String reason, boolean silent) throws StringToBigToConvertException {
-        try{
-            getServer().removePlayer(this, reason, silent);
-        } catch (ClientDisconnectedException ignored){}
+        getServer().removePlayer(this, reason, silent);
     }
 
     public Server getServer() {

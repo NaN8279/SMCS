@@ -160,6 +160,7 @@ public class Server {
 
             if (player.getUsername().equals(playerName)) {
                 player.disconnect(reason, false);
+                break;
             }
         }
 
@@ -238,7 +239,7 @@ public class Server {
         sendToAllClients(setBlockPacket);
     }
 
-    public void removePlayer(NPC npc, String reason, boolean silent) throws ClientDisconnectedException {
+    public void removePlayer(NPC npc, String reason, boolean silent) {
         onlinePlayers.remove(npc);
         sendToAllClients(new DespawnPlayerPacket(npc));
         if (!silent) {

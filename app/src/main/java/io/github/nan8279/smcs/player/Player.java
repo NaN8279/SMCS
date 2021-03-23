@@ -127,8 +127,13 @@ public class Player extends NPC {
                 send(new DisconnectPlayerPacket(Config.generateKickMessage(reason)));
                 socket.close();
             }
-            getServer().removePlayer(this, reason, silent);
         } catch (ClientDisconnectedException | IOException ignored) {}
+        getServer().removePlayer(this, reason, silent);
+        setFullyJoined(false);
+
+        if (tickThread != null) {
+            stopTickThread();
+        }
     }
 
     @Override
@@ -139,6 +144,10 @@ public class Player extends NPC {
     public void startTickThread() {
         tickThread = new TickPlayer(this);
         tickThread.start();
+    }
+
+    public void stopTickThread() {
+        tickThread.interrupt();
     }
 }
 
