@@ -34,3 +34,31 @@ When a player is ticked, the server will handle the packets the player send (e.g
 When the server is ticked, a specific amount of blocks in a 64 * 64 * (level height) radius from every player will be ticked.
 
 When a block is ticked, it can do a specific action (e.g. dirt turns into grass.) What this action is depends on the block.
+
+# Terrain generation
+There are for terrain types: OVERWORLD, FLAT, FLAT_OVERWORLD and AMPLIFIED.
+
+## OVERWORLD
+This terrain type is enabled by default. It generates a terrain using Perlin Noise.
+
+It has trees, flower fields, water and ore veins.
+
+## FLAT
+This terrain type is just a giant stone cube, covered in grass.
+
+## FLAT_OVERWORLD
+The same as FLAT, but with trees, flower fields, etc.
+
+## AMPLIFIED
+This terrain type is the same as OVERWORLD, but with higher mountains.
+
+### Seed
+Everything in world generation depends on the world seed. This includes trees, flower fields, ore veins and noise.
+
+Random block tick does NOT depend on the seed, but is completely random.
+
+# Java version
+This project is build on Java 11.
+
+# Credits
+Thanks to Auburn on GitHub for creating the Perlin Noise code used in this code. (I tried to create one myself, did not go well...)

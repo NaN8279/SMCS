@@ -51,7 +51,11 @@ public class FileConfig {
                         if (configLine.getValue() instanceof Boolean) {
                             config.put(name, Boolean.valueOf(value));
                         } else if (configLine.getValue() instanceof Number) {
-                            config.put(name, Integer.valueOf(value));
+                            if (configLine.getValue() instanceof Long) {
+                                config.put(name, Long.valueOf(value));
+                            } else {
+                                config.put(name, Integer.valueOf(value));
+                            }
                         } else {
                             config.put(name, value);
                         }

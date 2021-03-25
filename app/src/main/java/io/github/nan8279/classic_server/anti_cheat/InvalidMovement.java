@@ -72,6 +72,11 @@ public class InvalidMovement implements EventHandler {
             return false;
         }
 
+        if (event.getPlayer().getServer().getLevel().
+                getBlock(BlockPosition.fromPlayerPosition(newPosition)) == Block.WATER) {
+            return false;
+        }
+
         if (!event.getPlayer().getServer().getLevel().getBlock(blockUnderPosition).solid) {
             return !(newPosition.getPosY() < oldPosition.getPosY());
         }

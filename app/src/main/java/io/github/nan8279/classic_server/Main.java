@@ -4,10 +4,11 @@ import io.github.nan8279.classic_server.anti_cheat.AntiCheat;
 import io.github.nan8279.classic_server.commands.Command;
 import io.github.nan8279.classic_server.commands.MessageHandler;
 import io.github.nan8279.classic_server.config.FileConfig;
+import io.github.nan8279.classic_server.config.InvalidConfigException;
 import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
-import io.github.nan8279.smcs.level.generator.FlatOverworld;
+import io.github.nan8279.smcs.level.generator.*;
 import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.server.Server;
 
@@ -27,11 +28,25 @@ public class Main {
         config.addValue("server-name", serverName);
         config.addValue("server-motd", MOTD);
         Config.addToConfig(config);
+        WorldType.addToConfig(config);
+        config.addValue("world-seed", 0L);
 
         return config;
     }
 
-    private static Server readConfigFile(HashMap<String, Object> config, ServerLevel level) {
+    private static Server readConfigFile(HashMap<String, Object> config, BlockPosition spawnPosition,
+                                         short xSize, short ySize, short zSize, Block baseBlock)
+            throws InvalidConfigException {
+
+        ServerLevel level = WorldType.fromConfig(config).generateLevel(
+                spawnPosition,
+                xSize,
+                ySize,
+                zSize,
+                baseBlock,
+                config.get("world-seed") == null ? ThreadLocalRandom.current().nextLong() :
+                        (long) config.get("world-seed")
+        );
 
         Server server = new Server(level, (int) config.get("server-port"),
                 (String) config.get("server-name"), (String) config.get("server-motd"));
@@ -43,8 +58,8 @@ public class Main {
     }
 
     public Main() {
-        ServerLevel level = new FlatOverworld().generateLevel(new BlockPosition((short) 1, (short) 127, (short) 1),
-                (short) 255, (short) 255, (short) 255, Block.STONE, ThreadLocalRandom.current().nextLong());
+        BlockPosition spawnPosition = new BlockPosition((short) 1, (short) 127, (short) 1);
+        Block baseBlock = Block.STONE;
 
         String serverName = "My Minecraft server.";
         String MOTD = "Powered by SMCS";
@@ -76,11 +91,15 @@ public class Main {
             }
         }
 
-
         if (!Files.exists(Path.of("./server.properties"))) {
             try {
                 config.write("./server.properties");
-                server = new Server(level, port, serverName, MOTD);
+                server = new Server(new Overworld().generateLevel(
+                        spawnPosition,
+                        (short) 255, (short) 255, (short) 255,
+                        baseBlock,
+                        ThreadLocalRandom.current().nextLong()
+                ), port, serverName, MOTD);
             } catch (IOException exception) {
                 System.out.println("Error while writing to config file!");
                 exception.printStackTrace();
@@ -89,7 +108,8 @@ public class Main {
         } else {
             try {
                 HashMap<String, Object> readConfig = config.read("./server.properties");
-                server = readConfigFile(readConfig, level);
+                server = readConfigFile(readConfig, spawnPosition,
+                        (short) 255, (short) 255, (short) 255, baseBlock);
             } catch (Exception exception) {
                 System.out.println("Error while reading config file!");
                 exception.printStackTrace();
@@ -110,5 +130,34 @@ public class Main {
 
     public static void main(String [] args) {
         new Main();
+    }
+}
+
+enum WorldType {
+    OVERWORLD(new Overworld()),
+    FLAT(new FlatWorld()),
+    FLAT_OVERWORLD(new FlatOverworld()),
+    AMPLIFIED(new AmplifiedOverworld());
+
+    final private TerrainGenerator generator;
+    WorldType(TerrainGenerator generator) {
+        this.generator = generator;
+    }
+
+    public static void addToConfig(FileConfig config) {
+        config.addValue("world-type", OVERWORLD,
+                "The world type to generate. Can be OVERWORLD, FLAT, FLAT_OVERWORLD or AMPLIFIED.");
+    }
+
+    public static TerrainGenerator fromConfig(HashMap<String, Object> config) throws InvalidConfigException {
+        String worldType = (String) config.get("world-type");
+
+        for (WorldType world : WorldType.values()) {
+            if (world.toString().equals(worldType)) {
+                return world.generator;
+            }
+        }
+
+        throw new InvalidConfigException();
     }
 }

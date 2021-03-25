@@ -4,16 +4,19 @@ import io.github.nan8279.smcs.exceptions.NoSpaceForStructureException;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.level.blocks.ValidFlowerBlocks;
+import io.github.nan8279.smcs.level.generator.noise.Noise;
 import io.github.nan8279.smcs.level.structures.FlowerField;
 import io.github.nan8279.smcs.level.structures.OreVein;
 import io.github.nan8279.smcs.level.structures.Tree;
 import io.github.nan8279.smcs.position.BlockPosition;
+import io.github.nan8279.smcs.position.PlayerPosition;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Overworld {
+public class Overworld implements TerrainGenerator {
     final private static ArrayList<Block> ores = new ArrayList<>();
+    protected int noiseModifier = 10;
 
     static void generateFlowerFields(ServerLevel level, Random random) {
         for (short x = 0; x < level.getLevelWidth(); x++) {
@@ -112,7 +115,7 @@ public class Overworld {
             for (short z = 0; z < level.getLevelDepth(); z++) {
                 BlockPosition position = level.getHighestBlockPosition(x, z);
 
-                if (position.getPosY() < waterLevel) {
+                if (position.getPosY() < waterLevel - 1) {
                     continue;
                 }
 
@@ -128,5 +131,38 @@ public class Overworld {
         ores.add(Block.GOLD_ORE);
         ores.add(Block.IRON_ORE);
         ores.add(Block.COAL_ORE);
+    }
+
+    @Override
+    public ServerLevel generateLevel(BlockPosition spawnPosition,
+                                     short xSize, short ySize, short zSize, Block baseBlock, long seed) {
+        ServerLevel level = new ServerLevel(new byte[xSize * ySize * zSize], xSize, ySize, zSize,
+                PlayerPosition.fromBlockPosition(spawnPosition), seed);
+
+        Noise noise = new Noise((int) seed);
+        noise.SetNoiseType(Noise.NoiseType.Perlin);
+
+        Random random = new Random(seed);
+        int maxOreLevel = (ySize / 2) - 10;
+
+        for (short x = 0; x < xSize; x++) {
+            for (short z = 0; z < zSize; z++) {
+                int height = (int) ((ySize / 2) + (noise.GetNoise(x, z) * noiseModifier) + 3);
+
+                for (short y = 0; y < height; y++) {
+                    level.setBlock(new BlockPosition(x, y, z), baseBlock);
+                }
+            }
+        }
+
+        generateDirt(level, 3, ySize / 2);
+        generateGrass(level);
+
+        generateWater(level, ySize / 2);
+        generateTrees(level, random);
+        generateFlowerFields(level, random);
+        generateOres(level, random, maxOreLevel);
+
+        return level;
     }
 }
