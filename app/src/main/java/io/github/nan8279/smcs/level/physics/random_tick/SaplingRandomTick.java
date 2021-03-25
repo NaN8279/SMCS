@@ -10,7 +10,7 @@ public class SaplingRandomTick implements RandomTick {
     @Override
     public void updateBlock(Server server, BlockPosition position) {
         try {
-            new Tree().generateStructure(server, position);
+            new Tree().generateStructure(server, position, false);
         } catch (NoSpaceForStructureException ignored) {}
     }
 }

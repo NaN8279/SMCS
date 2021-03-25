@@ -7,6 +7,7 @@ import io.github.nan8279.classic_server.config.FileConfig;
 import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
+import io.github.nan8279.smcs.level.generator.FlatOverworld;
 import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.server.Server;
 
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
 
@@ -41,8 +43,8 @@ public class Main {
     }
 
     public Main() {
-        ServerLevel level = ServerLevel.generateFlatWorld(new BlockPosition((short) 1, (short) 127, (short) 1),
-                (short) 255, (short) 255, (short) 255, Block.STONE);
+        ServerLevel level = new FlatOverworld().generateLevel(new BlockPosition((short) 1, (short) 127, (short) 1),
+                (short) 255, (short) 255, (short) 255, Block.STONE, ThreadLocalRandom.current().nextLong());
 
         String serverName = "My Minecraft server.";
         String MOTD = "Powered by SMCS";

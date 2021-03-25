@@ -26,13 +26,20 @@ public class ServerLevel {
     final private int levelHeight;
     final private int levelDepth;
     final private byte[] data;
+    final private long seed;
 
-    private ServerLevel(byte[] data, int width, int height, int depth, PlayerPosition spawnPos){
+    public ServerLevel(byte[] data, int width, int height, int depth, PlayerPosition spawnPos,
+                       long seed){
         this.data = data;
         levelWidth = width;
         levelHeight = height;
         levelDepth = depth;
         this.spawnPos = spawnPos;
+        this.seed = seed;
+    }
+
+    public long getSeed() {
+        return seed;
     }
 
     public int getLevelWidth() {
@@ -163,41 +170,5 @@ public class ServerLevel {
         } catch (IOException | ByteArrayToBigToConvertException exception) {
             throw new ClientDisconnectedException();
         }
-    }
-
-    public static ServerLevel generateEmpty(BlockPosition spawnPosition,
-                                            short xSize, short ySize, short zSize, Block floor) {
-        byte[] worldData = new byte[xSize * ySize * zSize];
-        for (int x = 0; x < xSize; x++) {
-            for (int z = 0; z < zSize; z++) {
-                worldData[z * xSize + x] = floor.blockID;
-            }
-        }
-
-        return new ServerLevel(worldData, xSize, ySize, zSize,
-                PlayerPosition.fromBlockPosition(spawnPosition));
-    }
-
-    public static ServerLevel generateFlatWorld(BlockPosition spawnPosition,
-                                                short xSize, short ySize, short zSize, Block baseBlock) {
-        byte[] worldData = new byte[xSize * ySize * zSize];
-        int waterLevel = (ySize / 2) - 1;
-
-        for (int x = 0; x < xSize; x++) {
-            for (int y = 0; y < ySize; y++) {
-                for (int z = 0; z < zSize; z++) {
-                    int pos = (y * ySize + z) * xSize + x;
-                    if (y < waterLevel - 3) {
-                        worldData[pos] = baseBlock.blockID;
-                    } else if (y >= waterLevel - 3 && y < waterLevel) {
-                        worldData[pos] = Block.DIRT.blockID;
-                    } else if (y == waterLevel) {
-                        worldData[pos] = Block.GRASS.blockID;
-                    }
-                }
-            }
-        }
-
-        return new ServerLevel(worldData, xSize, ySize, zSize, PlayerPosition.fromBlockPosition(spawnPosition));
     }
 }

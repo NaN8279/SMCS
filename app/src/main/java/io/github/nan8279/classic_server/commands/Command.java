@@ -2,6 +2,7 @@ package io.github.nan8279.classic_server.commands;
 
 import io.github.nan8279.classic_server.commands.handlers.BanCommandHandler;
 import io.github.nan8279.classic_server.commands.handlers.KickCommandHandler;
+import io.github.nan8279.classic_server.commands.handlers.SeedCommandHandler;
 import io.github.nan8279.classic_server.commands.handlers.StopCommandHandler;
 import io.github.nan8279.smcs.event_manager.events.MessageEvent;
 import io.github.nan8279.smcs.exceptions.ClientDisconnectedException;
@@ -12,7 +13,9 @@ import java.util.ArrayList;
 public enum Command {
     STOP_COMMAND(new StopCommandHandler(), "stop", true, "Stops the server."),
     BAN_COMMAND(new BanCommandHandler(), "ban", true, "Bans a player."),
-    KICK_COMMAND(new KickCommandHandler(), "kick", true, "Kicks a player.");
+    KICK_COMMAND(new KickCommandHandler(), "kick", true, "Kicks a player."),
+    SEED_COMMAND(new SeedCommandHandler(), "seed", false,
+            "Returns the seed of this world.");
 
     final private static ArrayList<String> operators = new ArrayList<>();
     final private CommandHandler handler;
