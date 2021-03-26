@@ -108,4 +108,8 @@ public class NetworkUtils {
         bytes.putShort(s);
         return bytes.array();
     }
+
+    public static byte integerToByte(int b) {
+        return (byte) b;
+    }
 }

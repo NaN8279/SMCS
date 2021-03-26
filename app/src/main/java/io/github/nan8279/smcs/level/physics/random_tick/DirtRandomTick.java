@@ -8,10 +8,11 @@ public class DirtRandomTick implements RandomTick {
 
     @Override
     public void updateBlock(Server server, BlockPosition position) {
-        BlockPosition blockAbove = new BlockPosition(position.getPosX(),
+        BlockPosition posAbove = new BlockPosition(position.getPosX(),
                 (short) (position.getPosY() + 1), position.getPosZ());
+        Block blockAbove = server.getLevel().getBlock(posAbove);
 
-        if (server.getLevel().getBlock(blockAbove).solid) {
+        if (blockAbove.solid || blockAbove.liquid) {
             return;
         }
 

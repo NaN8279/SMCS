@@ -9,7 +9,6 @@ import io.github.nan8279.smcs.level.structures.FlowerField;
 import io.github.nan8279.smcs.level.structures.OreVein;
 import io.github.nan8279.smcs.level.structures.Tree;
 import io.github.nan8279.smcs.position.BlockPosition;
-import io.github.nan8279.smcs.position.PlayerPosition;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -134,10 +133,8 @@ public class Overworld implements TerrainGenerator {
     }
 
     @Override
-    public ServerLevel generateLevel(BlockPosition spawnPosition,
-                                     short xSize, short ySize, short zSize, Block baseBlock, long seed) {
-        ServerLevel level = new ServerLevel(new byte[xSize * ySize * zSize], xSize, ySize, zSize,
-                PlayerPosition.fromBlockPosition(spawnPosition), seed);
+    public ServerLevel generateLevel(short xSize, short ySize, short zSize, Block baseBlock, long seed) {
+        ServerLevel level = new ServerLevel(new byte[xSize * ySize * zSize], xSize, ySize, zSize, seed);
 
         Noise noise = new Noise((int) seed);
         noise.SetNoiseType(Noise.NoiseType.Perlin);
@@ -150,7 +147,9 @@ public class Overworld implements TerrainGenerator {
                 int height = (int) ((ySize / 2) + (noise.GetNoise(x, z) * noiseModifier) + 3);
 
                 for (short y = 0; y < height; y++) {
-                    level.setBlock(new BlockPosition(x, y, z), baseBlock);
+                    try {
+                        level.setBlock(new BlockPosition(x, y, z), baseBlock);
+                    } catch (ArrayIndexOutOfBoundsException ignored) {}
                 }
             }
         }

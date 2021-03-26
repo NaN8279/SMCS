@@ -6,7 +6,17 @@ import io.github.nan8279.smcs.position.BlockPosition;
 
 public class SandPhysic implements Physic {
     @Override
-    public SetBlockEvent updateBlock(SetBlockEvent event) {
+    public void updateBlock(SetBlockEvent event) {
+        BlockPosition blockBelow = new BlockPosition(
+                event.getBlockPosition().getPosX(),
+                (short) (event.getBlockPosition().getPosY() - 1),
+                event.getBlockPosition().getPosZ()
+        );
+
+        if (event.getPlayer().getServer().getLevel().getBlock(blockBelow) != Block.AIR) {
+            return;
+        }
+
         event.getPlayer().getServer().setBlock(event.getBlockPosition(), Block.AIR);
 
         BlockPosition newBlock = event.getPlayer().getServer().getLevel().getHighestBlockPosition(
@@ -17,7 +27,5 @@ public class SandPhysic implements Physic {
 
         newBlock = new BlockPosition(newBlock.getPosX(), (short) (newBlock.getPosY() + 1), newBlock.getPosZ());
         event.setBlockPosition(newBlock);
-
-        return event;
     }
 }

@@ -9,7 +9,6 @@ import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.level.generator.*;
-import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.server.Server;
 
 import java.io.IOException;
@@ -34,17 +33,15 @@ public class Main {
         return config;
     }
 
-    private static Server readConfigFile(HashMap<String, Object> config, BlockPosition spawnPosition,
-                                         short xSize, short ySize, short zSize, Block baseBlock)
+    private static Server readConfigFile(HashMap<String, Object> config, Block baseBlock)
             throws InvalidConfigException {
 
         ServerLevel level = WorldType.fromConfig(config).generateLevel(
-                spawnPosition,
-                xSize,
-                ySize,
-                zSize,
+                (short) 255,
+                (short) 255,
+                (short) 255,
                 baseBlock,
-                config.get("world-seed") == null ? ThreadLocalRandom.current().nextLong() :
+                (long) config.get("world-seed") == 0L ? ThreadLocalRandom.current().nextLong() :
                         (long) config.get("world-seed")
         );
 
@@ -58,7 +55,6 @@ public class Main {
     }
 
     public Main() {
-        BlockPosition spawnPosition = new BlockPosition((short) 1, (short) 127, (short) 1);
         Block baseBlock = Block.STONE;
 
         String serverName = "My Minecraft server.";
@@ -95,7 +91,6 @@ public class Main {
             try {
                 config.write("./server.properties");
                 server = new Server(new Overworld().generateLevel(
-                        spawnPosition,
                         (short) 255, (short) 255, (short) 255,
                         baseBlock,
                         ThreadLocalRandom.current().nextLong()
@@ -108,8 +103,8 @@ public class Main {
         } else {
             try {
                 HashMap<String, Object> readConfig = config.read("./server.properties");
-                server = readConfigFile(readConfig, spawnPosition,
-                        (short) 255, (short) 255, (short) 255, baseBlock);
+                server = readConfigFile(readConfig,
+                        baseBlock);
             } catch (Exception exception) {
                 System.out.println("Error while reading config file!");
                 exception.printStackTrace();
@@ -117,6 +112,7 @@ public class Main {
             }
         }
 
+        server.getLevel().calculateSpawnPosition();
         server.getEventManager().addEventHandler(new MessageHandler());
         server.run();
 

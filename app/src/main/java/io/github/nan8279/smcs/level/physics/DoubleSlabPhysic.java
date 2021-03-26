@@ -8,11 +8,11 @@ import io.github.nan8279.smcs.server.Server;
 public class DoubleSlabPhysic implements Physic {
 
     @Override
-    public SetBlockEvent updateBlock(SetBlockEvent event) {
+    public void updateBlock(SetBlockEvent event) {
         Server server = event.getPlayer().getServer();
         BlockPosition position = event.getBlockPosition();
         if (position.getPosY() == 0) {
-            return event;
+            return;
         }
 
         BlockPosition positionUnder = new BlockPosition(
@@ -25,6 +25,5 @@ public class DoubleSlabPhysic implements Physic {
             server.setBlock(positionUnder, Block.DOUBLE_SLAB);
             event.setBlock(Block.AIR);
         }
-        return event;
     }
 }

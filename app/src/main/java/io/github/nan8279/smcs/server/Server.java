@@ -2,11 +2,11 @@ package io.github.nan8279.smcs.server;
 
 import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.event_manager.EventManager;
-import io.github.nan8279.smcs.event_manager.events.PlayerJoinEvent;
+import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
 import io.github.nan8279.smcs.exceptions.*;
+import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.logger.Logger;
-import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.network_utils.NetworkUtils;
 import io.github.nan8279.smcs.network_utils.packets.ClientBoundPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
 
 class InitializeClient extends Thread{
     final private Server server;
@@ -34,35 +35,7 @@ class InitializeClient extends Thread{
 
     public void run(){
         try {
-            ServerIdentificationPacket identificationPacket = new ServerIdentificationPacket(
-                    (byte) 7,
-                    server.getName(),
-                    server.getMOTD(),
-                    false
-            );
-
-            for (NPC connectedNPC : server.getOnlinePlayers()) {
-                if (connectedNPC.getUsername().equals(player.getUsername())) {
-                    player.disconnect("Already logged in!", true);
-                    return;
-                }
-            }
-
-            if (server.getBannedPeople().contains(player.getUsername())) {
-                player.disconnect("You are banned.", true);
-                return;
-            }
-
-            player.send(identificationPacket);
-            server.getLevel().sendWorldData(player);
-
-            player.setFullyJoined(true);
-            player.startTickThread();
-
-            server.addPlayer(player, player.getJoinMessage(), false);
-
-            PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(player, joinPacket);
-            server.getEventManager().runEvent(playerJoinEvent);
+            player.initialize(joinPacket);
         } catch (ClientDisconnectedException | StringToBigToConvertException exception) {
             server.getLogger().error("Couldn't send initialize packets to player " + player.getUsername(),
                     exception);
@@ -133,6 +106,7 @@ public class Server {
     final private ArrayList<String> bannedPeople = new ArrayList<>();
     final private String name;
     final private String MOTD;
+    final private HashMap<SetBlockEvent, Integer> delayedBlockUpdates = new HashMap<>();
     private boolean stopping = false;
     private CheckForNewClients clientsThread;
 
@@ -141,6 +115,10 @@ public class Server {
         this.name = name;
         this.MOTD = MOTD;
         level = lvl;
+    }
+
+    public void addDelayedBlockUpdate(SetBlockEvent blockUpdate, int delay) {
+        delayedBlockUpdates.put(blockUpdate, delay);
     }
 
     public String getName() {
@@ -287,5 +265,16 @@ public class Server {
         } catch (ConcurrentModificationException ignored) {}
 
         level.randomTick(this);
+
+        for (int i = 0; i < delayedBlockUpdates.keySet().size(); i++) {
+            SetBlockEvent delayedUpdate = new ArrayList<>(delayedBlockUpdates.keySet()).get(i);
+
+            if (delayedBlockUpdates.get(delayedUpdate) == 0) {
+                level.updateBlock(delayedUpdate);
+                delayedBlockUpdates.remove(delayedUpdate);
+                continue;
+            }
+            delayedBlockUpdates.replace(delayedUpdate, delayedBlockUpdates.get(delayedUpdate) - 1);
+        }
     }
 }

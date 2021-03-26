@@ -12,7 +12,8 @@ public class EventManager {
     }
 
     public void runEvent(Event event) {
-        for (EventHandler eventHandler : eventHandlers) {
+        for (int i = 0; i < eventHandlers.size(); i++) {
+            EventHandler eventHandler = eventHandlers.get(i);
             eventHandler.onEvent(event);
         }
     }

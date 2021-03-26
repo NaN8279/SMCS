@@ -37,7 +37,7 @@ class CheckMaxBlockPlaced extends TimerTask {
 
     @Override
     public void run() {
-        if (spamCheck.blocksPlaced.get(player) > 25) {
+        if (spamCheck.blocksPlaced.get(player) > 15) {
             try {
                 player.disconnect("Too much block placement.", false);
             } catch (StringToBigToConvertException ignored) {}

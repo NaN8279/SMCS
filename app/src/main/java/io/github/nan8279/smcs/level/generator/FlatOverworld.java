@@ -9,10 +9,9 @@ import java.util.Random;
 public class FlatOverworld extends FlatWorld {
 
     @Override
-    public ServerLevel generateLevel(BlockPosition spawnPosition,
-                                     short xSize, short ySize, short zSize, Block baseBlock,
+    public ServerLevel generateLevel(short xSize, short ySize, short zSize, Block baseBlock,
                                      long seed) {
-        ServerLevel level = generateFlatWorld(spawnPosition, xSize, ySize, zSize, baseBlock,
+        ServerLevel level = generateFlatWorld(xSize, ySize, zSize, baseBlock,
                 seed);
         int maxOreLevel = (ySize / 2) - 10;
         Random random = new Random(seed);

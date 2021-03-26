@@ -2,6 +2,7 @@ package io.github.nan8279.smcs.player;
 
 import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.event_manager.events.MessageEvent;
+import io.github.nan8279.smcs.event_manager.events.PlayerJoinEvent;
 import io.github.nan8279.smcs.event_manager.events.PlayerMoveEvent;
 import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
 import io.github.nan8279.smcs.exceptions.*;
@@ -12,6 +13,7 @@ import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 import io.github.nan8279.smcs.network_utils.packets.clientbound_packets.ClientMessagePacket;
 import io.github.nan8279.smcs.network_utils.packets.clientbound_packets.ClientPositionPacket;
 import io.github.nan8279.smcs.network_utils.packets.clientbound_packets.ClientSetBlockPacket;
+import io.github.nan8279.smcs.network_utils.packets.clientbound_packets.PlayerIdentificationPacket;
 import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.*;
 import io.github.nan8279.smcs.position.PlayerPosition;
 import io.github.nan8279.smcs.server.Server;
@@ -30,6 +32,37 @@ public class Player extends NPC {
         socket = s;
     }
 
+    public void initialize(PlayerIdentificationPacket joinPacket)
+            throws StringToBigToConvertException, ClientDisconnectedException {
+        ServerIdentificationPacket identificationPacket = new ServerIdentificationPacket(
+                (byte) 7,
+                getServer().getName(),
+                getServer().getMOTD(),
+                false
+        );
+
+        for (NPC connectedNPC : getServer().getOnlinePlayers()) {
+            if (connectedNPC.getUsername().equals(getUsername())) {
+                disconnect("Already logged in!", true);
+                return;
+            }
+        }
+
+        if (getServer().getBannedPeople().contains(getUsername())) {
+            disconnect("You are banned.", true);
+            return;
+        }
+
+        send(identificationPacket);
+        getServer().getLevel().sendWorld(this);
+        setFullyJoined(true);
+        startTickThread();
+        getServer().addPlayer(this, getJoinMessage(), false);
+
+        PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(this, joinPacket);
+        getServer().getEventManager().runEvent(playerJoinEvent);
+    }
+
     public void setCanBreakBedrock(boolean canBreakBedrock) throws ClientDisconnectedException {
         this.canBreakBedrock = canBreakBedrock;
         send(new UpdateUserTypePacket(canBreakBedrock));
@@ -37,6 +70,10 @@ public class Player extends NPC {
 
     public boolean canBreakBedrock() {
         return canBreakBedrock;
+    }
+
+    public String getIPAddress() {
+        return socket.getInetAddress().getHostAddress();
     }
 
     public String getJoinMessage() {
@@ -83,7 +120,7 @@ public class Player extends NPC {
                     ((ClientSetBlockPacket) packet).getBlockPosition(),
                     block);
 
-            event = getServer().getLevel().checkPhysic(event);
+            getServer().getLevel().updateBlock(event);
             getServer().getEventManager().runEvent(event);
 
             if (event.isCanceled()) {
@@ -92,6 +129,8 @@ public class Player extends NPC {
             } else {
                 getServer().setBlock(event.getBlockPosition(), event.getBlock());
             }
+
+            getServer().getLevel().updateNeighbours(event);
         } else if (packet instanceof ClientMessagePacket){
             MessageEvent messageEvent = new MessageEvent(this, packet,
                     ((ClientMessagePacket) packet).getMessage());

@@ -1,9 +1,6 @@
 package io.github.nan8279.classic_server.commands;
 
-import io.github.nan8279.classic_server.commands.handlers.BanCommandHandler;
-import io.github.nan8279.classic_server.commands.handlers.KickCommandHandler;
-import io.github.nan8279.classic_server.commands.handlers.SeedCommandHandler;
-import io.github.nan8279.classic_server.commands.handlers.StopCommandHandler;
+import io.github.nan8279.classic_server.commands.handlers.*;
 import io.github.nan8279.smcs.event_manager.events.MessageEvent;
 import io.github.nan8279.smcs.exceptions.ClientDisconnectedException;
 import io.github.nan8279.smcs.exceptions.StringToBigToConvertException;
@@ -15,7 +12,9 @@ public enum Command {
     BAN_COMMAND(new BanCommandHandler(), "ban", true, "Bans a player."),
     KICK_COMMAND(new KickCommandHandler(), "kick", true, "Kicks a player."),
     SEED_COMMAND(new SeedCommandHandler(), "seed", false,
-            "Returns the seed of this world.");
+            "Returns the seed of this world."),
+    INFO_COMMAND(new InfoCommandHandler(), "info", true,
+            "Returns info about the given player.");
 
     final private static ArrayList<String> operators = new ArrayList<>();
     final private CommandHandler handler;
