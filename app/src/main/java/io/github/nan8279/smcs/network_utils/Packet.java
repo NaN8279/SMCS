@@ -29,6 +29,14 @@ public class Packet {
         }
     }
 
+    public int readInt() throws InvalidPacketException {
+        try {
+            return stream.readInt();
+        } catch (IOException exception) {
+            throw new InvalidPacketException();
+        }
+    }
+
     public byte[] readByteArray() throws InvalidPacketException {
         try {
             byte[] byteArray = new byte[1024];

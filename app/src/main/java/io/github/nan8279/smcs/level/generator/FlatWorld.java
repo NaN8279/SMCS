@@ -8,7 +8,7 @@ public class FlatWorld implements TerrainGenerator {
 
     protected ServerLevel generateFlatWorld(short xSize, short ySize, short zSize, Block baseBlock, long seed) {
         byte[] worldData = new byte[xSize * ySize * zSize];
-        ServerLevel level = new ServerLevel(worldData, xSize, ySize, zSize, seed);
+        ServerLevel level = new ServerLevel(worldData, xSize, ySize, zSize, seed, this);
 
         for (short x = 0; x < xSize; x++) {
             for (short y = 0; y < (ySize / 2); y++) {
@@ -20,7 +20,7 @@ public class FlatWorld implements TerrainGenerator {
         }
 
         Overworld.generateDirt(level, 3, 0);
-        Overworld.generateGrass(level);
+        Overworld.generateGrass(level, Block.GRASS);
 
         return level;
     }

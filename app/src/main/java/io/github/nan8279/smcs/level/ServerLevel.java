@@ -6,6 +6,8 @@ import io.github.nan8279.smcs.exceptions.ByteArrayToBigToConvertException;
 import io.github.nan8279.smcs.exceptions.ClientDisconnectedException;
 import io.github.nan8279.smcs.exceptions.InvalidBlockIDException;
 import io.github.nan8279.smcs.level.blocks.Block;
+import io.github.nan8279.smcs.level.generator.Overworld;
+import io.github.nan8279.smcs.level.generator.TerrainGenerator;
 import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.LevelDataChunkPacket;
 import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.LevelFinalizePacket;
 import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.LevelInitializePacket;
@@ -27,14 +29,25 @@ public class ServerLevel {
     final private int levelDepth;
     final private byte[] data;
     final private long seed;
+    final private TerrainGenerator generator;
     private PlayerPosition spawnPos;
 
-    public ServerLevel(byte[] data, int width, int height, int depth, long seed){
+    public ServerLevel(byte[] data, int width, int height, int depth, long seed,
+                       TerrainGenerator generator){
         this.data = data;
         levelWidth = width;
         levelHeight = height;
         levelDepth = depth;
         this.seed = seed;
+        this.generator = generator;
+    }
+
+    public TerrainGenerator getGenerator() {
+        return generator;
+    }
+
+    byte[] getData() {
+        return data;
     }
 
     public void calculateSpawnPosition() {
@@ -208,18 +221,21 @@ public class ServerLevel {
     public void sendWorld(Player player) throws ClientDisconnectedException {
         try {
             ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
-            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArray);
-            DataOutputStream outputStream = new DataOutputStream(gzipOutputStream);
+
+            GZIPOutputStream zipOutputStream = new GZIPOutputStream(byteArray);
+
+            DataOutputStream outputStream = new DataOutputStream(zipOutputStream);
 
             outputStream.writeInt(data.length);
             outputStream.write(data);
             outputStream.close();
-            gzipOutputStream.close();
+            zipOutputStream.close();
 
             byte[] payload = byteArray.toByteArray();
             byteArray.close();
 
             player.send(new LevelInitializePacket());
+
             int position = 0;
             while (position != payload.length) {
                 short length = (short) Math.min(payload.length - position, 1024);
@@ -243,7 +259,7 @@ public class ServerLevel {
             inputStream.skip(344);
             byte[] blocks = new byte[256 * 256 * 256];
             inputStream.read(blocks, 0, 4194304);
-            return new ServerLevel(blocks, 256, 256, 256, 0L);
+            return new ServerLevel(blocks, 256, 256, 256, 0L, new Overworld());
         } catch (IOException exception) {
             exception.printStackTrace();
             return null;

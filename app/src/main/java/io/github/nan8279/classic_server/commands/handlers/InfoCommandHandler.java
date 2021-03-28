@@ -2,6 +2,7 @@ package io.github.nan8279.classic_server.commands.handlers;
 
 import io.github.nan8279.classic_server.commands.CommandException;
 import io.github.nan8279.classic_server.commands.CommandHandler;
+import io.github.nan8279.smcs.CPE.extensions.HeldBlockExtension;
 import io.github.nan8279.smcs.event_manager.EventHandler;
 import io.github.nan8279.smcs.event_manager.events.Event;
 import io.github.nan8279.smcs.event_manager.events.MessageEvent;
@@ -17,7 +18,7 @@ import io.github.nan8279.smcs.position.PlayerPosition;
 import java.util.HashMap;
 
 public class InfoCommandHandler implements CommandHandler {
-    final private HashMap<Player, Block> blockHolding = new HashMap<>();
+    final private HashMap<Player, Block> heldBlocks = new HashMap<>();
     private boolean addedEventHandler = false;
 
     @Override
@@ -40,6 +41,8 @@ public class InfoCommandHandler implements CommandHandler {
 
             if (onlinePlayer.getUsername().equals(name)) {
                 PlayerPosition playerPosition = onlinePlayer.getPos();
+                Block blockHolding = ((Player) onlinePlayer).supportsCPE() ?
+                        HeldBlockExtension.getBlockHolding((Player) onlinePlayer) : heldBlocks.get(onlinePlayer);
 
                 String position =
                         playerPosition.getPosX() + ", " + playerPosition.getPosY() + ", " + playerPosition.getPosZ();
@@ -48,14 +51,15 @@ public class InfoCommandHandler implements CommandHandler {
                         "Player name: " + name + "\n" +
                         "IP address: " + ((Player) onlinePlayer).getIPAddress() + "\n" +
                         "Position: " + position + "\n" +
-                        "Block holding (inaccurate): " + blockHolding.get(onlinePlayer);
+                        "Block holding (inaccurate): " + blockHolding + "\n" +
+                        "Client (only works properly with CPE on): " + ((Player) onlinePlayer).getClient();
 
                 for (String part : message.split("\n")) {
                     try {
                         event.getPlayer().sendMessage("&b" + part);
                     } catch (ClientDisconnectedException | StringToBigToConvertException ignored) {}
                 }
-                break;
+                return;
             }
         }
 
@@ -68,11 +72,11 @@ public class InfoCommandHandler implements CommandHandler {
         public void onEvent(Event event) {
             if (event instanceof SetBlockEvent) {
                 assert event.getPacket() instanceof ClientSetBlockPacket;
-                if (blockHolding.get(event.getPlayer()) != null) {
-                    blockHolding.replace(event.getPlayer(),
+                if (heldBlocks.get(event.getPlayer()) != null) {
+                    heldBlocks.replace(event.getPlayer(),
                             ((ClientSetBlockPacket) event.getPacket()).getBlockHolding());
                 } else {
-                    blockHolding.put(event.getPlayer(),
+                    heldBlocks.put(event.getPlayer(),
                             ((ClientSetBlockPacket) event.getPacket()).getBlockHolding());
                 }
             }

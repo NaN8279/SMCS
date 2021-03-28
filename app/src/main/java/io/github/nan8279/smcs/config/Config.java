@@ -12,6 +12,7 @@ public class Config {
     public static String KICK_MESSAGE = "&1You were kicked. Reason: &4{reason}";
     public static String DEFAULT_DISCONNECT_REASON = "disconnected";
     public static int RANDOM_TICK_SPEED = 3;
+    public static boolean USE_CPE = false;
 
     public static String generateJoinMessage(NPC npc){
         return JOIN_MESSAGE.replace("{player}", npc.getUsername());
@@ -40,6 +41,9 @@ public class Config {
 
         config.addValue("random-tick-speed", RANDOM_TICK_SPEED,
                 "Warning! High values increase server lag");
+
+        config.addValue("use-cpe", USE_CPE,
+                "Uses communication with clients like Classicube to prevent hacking.");
     }
 
     public static void readFromConfig(HashMap<String, Object> config) {
@@ -51,5 +55,7 @@ public class Config {
         DEFAULT_DISCONNECT_REASON = (String) config.get("default-disconnect-reason");
 
         RANDOM_TICK_SPEED = (int) config.get("random-tick-speed");
+
+        USE_CPE = (boolean) config.get("use-cpe");
     }
 }

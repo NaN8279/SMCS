@@ -15,72 +15,64 @@ import java.util.Random;
 
 public class Overworld implements TerrainGenerator {
     final private static ArrayList<Block> ores = new ArrayList<>();
+    protected Block liquid = Block.WATER;
     protected int noiseModifier = 10;
+    protected int treeGenerateChance = 150;
+    protected Block grassBlock = Block.GRASS;
 
-    static void generateFlowerFields(ServerLevel level, Random random) {
-        for (short x = 0; x < level.getLevelWidth(); x++) {
-            for (short z = 0; z < level.getLevelDepth(); z++) {
-                BlockPosition highestBlock = level.getHighestBlockPosition(x, z);
+    static void generateFlowerFields(ServerLevel level, Random random,
+                                     short x, short z) {
+        BlockPosition highestBlock = level.getHighestBlockPosition(x, z);
 
-                if (random.nextInt(250) == 50) {
-                    Block flower = Block.DANDELION;
-                    if (random.nextInt(8) == 5) {
-                        flower = Block.ROSE;
-                    }
+        if (random.nextInt(250) == 0) {
+            Block flower = Block.DANDELION;
+            if (random.nextInt(8) == 0) {
+                flower = Block.ROSE;
+            }
 
-                    try {
-                        FlowerField.generateFlowerField(random, flower, level, highestBlock).
-                                generateStructureForLevel(level, highestBlock, true);
-                    } catch (NoSpaceForStructureException ignored) {}
-                }
+            try {
+                FlowerField.generateFlowerField(random, flower, level, highestBlock).
+                        generateStructureForLevel(level, highestBlock, true);
+            } catch (NoSpaceForStructureException ignored) {}
+        }
+    }
+
+    static void generateTrees(ServerLevel level, Random random,
+                              short x, short z, int treeGenerateChance) {
+        BlockPosition highestBlock = level.getHighestBlockPosition(x, z);
+        BlockPosition generatePosition = new BlockPosition(
+                highestBlock.getPosX(),
+                (short) (highestBlock.getPosY() + 1),
+                highestBlock.getPosZ());
+
+        if (ValidFlowerBlocks.isValidBlock(level.getBlock(highestBlock))) {
+            if (random.nextInt(treeGenerateChance) == 0) {
+                try {
+                    new Tree().generateStructureForLevel(level, generatePosition, false);
+                } catch (NoSpaceForStructureException ignored) {}
             }
         }
     }
 
-    static void generateTrees(ServerLevel level, Random random) {
-        for (short x = 0; x < level.getLevelWidth(); x++) {
-            for (short z = 0; z < level.getLevelDepth(); z++) {
-                BlockPosition highestBlock = level.getHighestBlockPosition(x, z);
-                BlockPosition generatePosition = new BlockPosition(
-                        highestBlock.getPosX(),
-                        (short) (highestBlock.getPosY() + 1),
-                        highestBlock.getPosZ());
+    static void generateOres(ServerLevel level, Random random,
+                             short x, short y, short z) {
+        BlockPosition orePosition = new BlockPosition(x, y, z);
 
-                if (ValidFlowerBlocks.isValidBlock(level.getBlock(highestBlock))) {
-                    if (random.nextInt(150) == 50) {
-                        try {
-                            new Tree().generateStructureForLevel(level, generatePosition, false);
-                        } catch (NoSpaceForStructureException ignored) {}
-                    }
-                }
-            }
+        if (!(random.nextInt(1000) == 0)) {
+            return;
+        }
+
+        if (level.getBlock(orePosition) == Block.STONE) {
+            Block oreBlock = ores.get(random.nextInt(ores.size()));
+
+            try {
+                OreVein.generateOreVein(random, oreBlock).
+                        generateStructureForLevel(level, orePosition, true);
+            } catch (NoSpaceForStructureException ignored) {}
         }
     }
 
-    static void generateOres(ServerLevel level, Random random, int maxOreLevel) {
-        for (short x = 0; x < level.getLevelWidth(); x++) {
-            for (short z = 0; z < level.getLevelDepth(); z++) {
-                for (short y = 0; y < maxOreLevel; y++) {
-                    BlockPosition orePosition = new BlockPosition(x, y, z);
-
-                    if (!(random.nextInt(1000) == 50)) {
-                        continue;
-                    }
-
-                    if (level.getBlock(orePosition) == Block.STONE) {
-                        Block oreBlock = ores.get(random.nextInt(ores.size()));
-
-                        try {
-                            OreVein.generateOreVein(random, oreBlock).
-                                    generateStructureForLevel(level, orePosition, true);
-                        } catch (NoSpaceForStructureException ignored) {}
-                    }
-                }
-            }
-        }
-    }
-
-    static void generateWater(ServerLevel level, int waterLevel) {
+    static void generateLiquid(ServerLevel level, int waterLevel, Block liquid) {
         for (short x = 0; x < level.getLevelWidth(); x++) {
             for (short z = 0; z < level.getLevelDepth(); z++) {
                 for (short y = 0; y < waterLevel; y++) {
@@ -88,7 +80,7 @@ public class Overworld implements TerrainGenerator {
                     BlockPosition above = new BlockPosition(x, (short) (y + 1), z);
 
                     if (level.getBlock(position) == Block.AIR) {
-                        level.setBlock(position, Block.WATER);
+                        level.setBlock(position, liquid);
                     } else if (level.getBlock(above) == Block.AIR && y + 1 != waterLevel) {
                         level.setBlock(position, Block.GRAVEL);
                     }
@@ -97,13 +89,13 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
-    static void generateGrass(ServerLevel level) {
+    static void generateGrass(ServerLevel level, Block grassBlock) {
         for (short x = 0; x < level.getLevelWidth(); x++) {
             for (short z = 0; z < level.getLevelDepth(); z++) {
                 BlockPosition position = level.getHighestBlockPosition(x, z);
 
                 if (level.getBlock(position) == Block.DIRT) {
-                    level.setBlock(position, Block.GRASS);
+                    level.setBlock(position, grassBlock);
                 }
             }
         }
@@ -126,21 +118,10 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
-    static {
-        ores.add(Block.GOLD_ORE);
-        ores.add(Block.IRON_ORE);
-        ores.add(Block.COAL_ORE);
-    }
-
-    @Override
-    public ServerLevel generateLevel(short xSize, short ySize, short zSize, Block baseBlock, long seed) {
-        ServerLevel level = new ServerLevel(new byte[xSize * ySize * zSize], xSize, ySize, zSize, seed);
-
+    protected void setNoise(ServerLevel level, long seed,
+                            int xSize, int ySize, int zSize, Block baseBlock) {
         Noise noise = new Noise((int) seed);
         noise.SetNoiseType(Noise.NoiseType.Perlin);
-
-        Random random = new Random(seed);
-        int maxOreLevel = (ySize / 2) - 10;
 
         for (short x = 0; x < xSize; x++) {
             for (short z = 0; z < zSize; z++) {
@@ -153,15 +134,43 @@ public class Overworld implements TerrainGenerator {
                 }
             }
         }
+    }
+
+    protected void generateExtra(Random random, ServerLevel level) {}
+
+    @Override
+    public ServerLevel generateLevel(short xSize, short ySize, short zSize, Block baseBlock, long seed) {
+        ServerLevel level = new ServerLevel(new byte[xSize * ySize * zSize], xSize, ySize, zSize, seed,
+                this);
+
+        Random random = new Random(seed);
+        int maxOreLevel = (ySize / 2) - 10;
+
+        setNoise(level, seed, xSize, ySize, zSize, baseBlock);
 
         generateDirt(level, 3, ySize / 2);
-        generateGrass(level);
+        generateGrass(level, grassBlock);
+        generateLiquid(level, ySize / 2, liquid);
 
-        generateWater(level, ySize / 2);
-        generateTrees(level, random);
-        generateFlowerFields(level, random);
-        generateOres(level, random, maxOreLevel);
+        for (short x = 0; x < xSize; x++) {
+            for (short z = 0; z < zSize; z++) {
+                generateTrees(level, random, x, z, treeGenerateChance);
+                generateFlowerFields(level, random, x, z);
+
+                for (short y = 0; y < maxOreLevel; y++) {
+                    generateOres(level, random, x, y, z);
+                }
+            }
+        }
+
+        generateExtra(random, level);
 
         return level;
+    }
+
+    static {
+        ores.add(Block.GOLD_ORE);
+        ores.add(Block.IRON_ORE);
+        ores.add(Block.COAL_ORE);
     }
 }

@@ -1,11 +1,14 @@
 package io.github.nan8279.smcs.player;
 
+import io.github.nan8279.smcs.CPE.extensions.TwoWayPingExtension;
 import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.event_manager.events.MessageEvent;
 import io.github.nan8279.smcs.event_manager.events.PlayerJoinEvent;
 import io.github.nan8279.smcs.event_manager.events.PlayerMoveEvent;
 import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
 import io.github.nan8279.smcs.exceptions.*;
+import io.github.nan8279.smcs.CPE.AbstractExtension;
+import io.github.nan8279.smcs.CPE.Extension;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.network_utils.NetworkUtils;
 import io.github.nan8279.smcs.network_utils.packets.ClientBoundPacket;
@@ -18,18 +21,28 @@ import io.github.nan8279.smcs.network_utils.packets.serverbound_packets.*;
 import io.github.nan8279.smcs.position.PlayerPosition;
 import io.github.nan8279.smcs.server.Server;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
 
 public class Player extends NPC {
     final private Socket socket;
     private boolean fullyJoined = false;
-    private boolean canBreakBedrock = false;
+    private boolean supportsCPE = false;
+    private String client = "Vanilla";
     private TickPlayer tickThread;
 
     public Player(String name, Socket s, PlayerPosition spawnPos, Server server) {
         super(name, spawnPos, server);
         socket = s;
+    }
+
+    public String getClient() {
+        return client;
+    }
+
+    public boolean supportsCPE() {
+        return supportsCPE;
     }
 
     public void initialize(PlayerIdentificationPacket joinPacket)
@@ -53,6 +66,52 @@ public class Player extends NPC {
             return;
         }
 
+        if (joinPacket.getUnusedByte() == 66 && Config.USE_CPE) {
+            supportsCPE = true;
+            send(new AbstractExtension.ExtInfoPacket((short) Extension.values().length));
+            HashMap<String, Boolean> clientSupportedExtensions = new HashMap<>();
+
+            for (Extension extension : Extension.values()) {
+                send(new AbstractExtension.ExtEntryPacket(extension.getExtension()));
+                clientSupportedExtensions.put(extension.getExtension().getName(), false);
+            }
+
+            try {
+                ClientBoundPacket extInfoPacket = receive();
+                assert extInfoPacket instanceof AbstractExtension.ClientExtInfoPacket;
+
+                int clientExtensionCount = ((AbstractExtension.ClientExtInfoPacket) extInfoPacket).getExtensionCount();
+                client = ((AbstractExtension.ClientExtInfoPacket) extInfoPacket).getAppName();
+
+                if (!(clientExtensionCount >= Extension.values().length)) {
+                    disconnect("Unsupported client!", true);
+                    throw new ClientDisconnectedException();
+                }
+
+                for (int i = 1; i < clientExtensionCount; i++) {
+                    ClientBoundPacket extEntryPacket = receive();
+                    assert extEntryPacket instanceof AbstractExtension.ClientExtEntryPacket;
+
+                    for (String extensionName : clientSupportedExtensions.keySet()) {
+                        if (((AbstractExtension.ClientExtEntryPacket) extEntryPacket).
+                                getExtensionName().equals(extensionName)) {
+                            clientSupportedExtensions.replace(extensionName, true);
+                        }
+                    }
+                }
+
+                for (boolean extensionSupported : clientSupportedExtensions.values()) {
+                    if (!extensionSupported) {
+                        disconnect("Unsupported client!", true);
+                        throw new ClientDisconnectedException();
+                    }
+                }
+            } catch (InvalidPacketException | IOException | InvalidPacketIDException |
+                    TimeoutReachedException exception) {
+                throw new ClientDisconnectedException();
+            }
+        }
+
         send(identificationPacket);
         getServer().getLevel().sendWorld(this);
         setFullyJoined(true);
@@ -61,15 +120,6 @@ public class Player extends NPC {
 
         PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(this, joinPacket);
         getServer().getEventManager().runEvent(playerJoinEvent);
-    }
-
-    public void setCanBreakBedrock(boolean canBreakBedrock) throws ClientDisconnectedException {
-        this.canBreakBedrock = canBreakBedrock;
-        send(new UpdateUserTypePacket(canBreakBedrock));
-    }
-
-    public boolean canBreakBedrock() {
-        return canBreakBedrock;
     }
 
     public String getIPAddress() {
@@ -106,8 +156,7 @@ public class Player extends NPC {
 
             getServer().getEventManager().runEvent(moveEvent);
 
-            if (moveEvent.isCancelled() ||
-                    moveEvent.getNewPosition() != ((ClientPositionPacket) packet).getPlayerPosition()) {
+            if (moveEvent.isCancelled()) {
                 send(new ServerPositionPacket(null, moveEvent.getNewPosition()));
             } else {
                 setPos(moveEvent.getNewPosition());
@@ -138,6 +187,13 @@ public class Player extends NPC {
             getServer().getEventManager().runEvent(messageEvent);
             if (!messageEvent.isCanceled()) {
                 getServer().sendMessage(Config.generateChatMessage(this, messageEvent.getMessage()));
+            }
+        } else if (packet instanceof TwoWayPingExtension.TwoWayPingClientPacket) {
+            if (((TwoWayPingExtension.TwoWayPingClientPacket) packet).getDirection() == 0) {
+                send(new TwoWayPingExtension.TwoWayPingServerPacket(
+                        (byte) 0,
+                        ((TwoWayPingExtension.TwoWayPingClientPacket) packet).getData()
+                ));
             }
         }
 
@@ -193,6 +249,7 @@ public class Player extends NPC {
 class TickPlayer extends Thread {
     final private Player player;
     private boolean needsTick = false;
+    private int ping = 0;
 
     public TickPlayer(Player player) {
         this.player = player;
@@ -208,13 +265,20 @@ class TickPlayer extends Thread {
                 continue;
             }
 
-            try {
-                player.send(new PingPacket());
-            } catch (ClientDisconnectedException e) {
+            if (ping == 10) {
                 try {
-                    player.disconnect(Config.DEFAULT_DISCONNECT_REASON, false);
-                } catch (StringToBigToConvertException ignored){}
-                return;
+                    if (player.supportsCPE()) {
+                        player.send(new TwoWayPingExtension.TwoWayPingServerPacket());
+                    } else {
+                        player.send(new PingPacket());
+                    }
+                } catch (ClientDisconnectedException e) {
+                    try {
+                        player.disconnect(Config.DEFAULT_DISCONNECT_REASON, false);
+                    } catch (StringToBigToConvertException ignored){}
+                    return;
+                }
+                ping = 0;
             }
 
             try {
@@ -227,6 +291,7 @@ class TickPlayer extends Thread {
             }
 
             needsTick = false;
+            ping++;
         }
     }
 

@@ -6,9 +6,13 @@ import io.github.nan8279.classic_server.commands.MessageHandler;
 import io.github.nan8279.classic_server.config.FileConfig;
 import io.github.nan8279.classic_server.config.InvalidConfigException;
 import io.github.nan8279.smcs.config.Config;
+import io.github.nan8279.smcs.level.LevelSaver;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.level.generator.*;
+import io.github.nan8279.smcs.level.generator.indev_map_themes.Hell;
+import io.github.nan8279.smcs.level.generator.indev_map_themes.Paradise;
+import io.github.nan8279.smcs.level.generator.indev_map_themes.Woods;
 import io.github.nan8279.smcs.server.Server;
 
 import java.io.IOException;
@@ -36,14 +40,7 @@ public class Main {
     private static Server readConfigFile(HashMap<String, Object> config, Block baseBlock)
             throws InvalidConfigException {
 
-        ServerLevel level = WorldType.fromConfig(config).generateLevel(
-                (short) 255,
-                (short) 255,
-                (short) 255,
-                baseBlock,
-                (long) config.get("world-seed") == 0L ? ThreadLocalRandom.current().nextLong() :
-                        (long) config.get("world-seed")
-        );
+        ServerLevel level = getLevel(baseBlock, config);
 
         Server server = new Server(level, (int) config.get("server-port"),
                 (String) config.get("server-name"), (String) config.get("server-motd"));
@@ -90,11 +87,7 @@ public class Main {
         if (!Files.exists(Path.of("./server.properties"))) {
             try {
                 config.write("./server.properties");
-                server = new Server(new Overworld().generateLevel(
-                        (short) 255, (short) 255, (short) 255,
-                        baseBlock,
-                        ThreadLocalRandom.current().nextLong()
-                ), port, serverName, MOTD);
+                server = new Server(getLevel(baseBlock), port, serverName, MOTD);
             } catch (IOException exception) {
                 System.out.println("Error while writing to config file!");
                 exception.printStackTrace();
@@ -122,10 +115,67 @@ public class Main {
                 Thread.sleep(25);
             } catch (InterruptedException ignored) {}
         }
+
+        try {
+            LevelSaver.saveLevel(server.getLevel(), "server_level.smclevel");
+        } catch (IOException exception) {
+            System.out.println("Couldn't save server level.");
+            exception.printStackTrace();
+        }
     }
 
     public static void main(String [] args) {
         new Main();
+    }
+
+    private static ServerLevel getLevel(Block baseBlock) {
+        ServerLevel level = null;
+
+        if (Files.exists(Path.of("server_level.smclevel"))) {
+            try {
+                level = LevelSaver.readLevel("server_level.smclevel");
+            } catch (IOException exception) {
+                System.out.println("Couldn't read server level.");
+                exception.printStackTrace();
+            }
+        }
+
+        if (level == null) {
+            level = new Overworld().generateLevel(
+                    (short) 255, (short) 255, (short) 255,
+                    baseBlock,
+                    ThreadLocalRandom.current().nextLong()
+            );
+        }
+
+        return level;
+    }
+
+    private static ServerLevel getLevel(Block baseBlock, HashMap<String, Object> config)
+            throws InvalidConfigException {
+        ServerLevel level = null;
+
+        if (Files.exists(Path.of("server_level.smclevel"))) {
+            try {
+                level = LevelSaver.readLevel("server_level.smclevel");
+            } catch (IOException exception) {
+                System.out.println("Couldn't read server level.");
+                exception.printStackTrace();
+            }
+        }
+
+        if (level == null) {
+            level = WorldType.fromConfig(config).generateLevel(
+                    (short) 255,
+                    (short) 255,
+                    (short) 255,
+                    baseBlock,
+                    (long) config.get("world-seed") == 0L ? ThreadLocalRandom.current().nextLong() :
+                            (long) config.get("world-seed")
+            );
+        }
+
+        return level;
     }
 }
 
@@ -133,7 +183,10 @@ enum WorldType {
     OVERWORLD(new Overworld()),
     FLAT(new FlatWorld()),
     FLAT_OVERWORLD(new FlatOverworld()),
-    AMPLIFIED(new AmplifiedOverworld());
+    AMPLIFIED(new AmplifiedOverworld()),
+    HELL(new Hell()),
+    PARADISE(new Paradise()),
+    WOODS(new Woods());
 
     final private TerrainGenerator generator;
     WorldType(TerrainGenerator generator) {
@@ -142,7 +195,7 @@ enum WorldType {
 
     public static void addToConfig(FileConfig config) {
         config.addValue("world-type", OVERWORLD,
-                "The world type to generate. Can be OVERWORLD, FLAT, FLAT_OVERWORLD or AMPLIFIED.");
+                "The world type to generate.");
     }
 
     public static TerrainGenerator fromConfig(HashMap<String, Object> config) throws InvalidConfigException {

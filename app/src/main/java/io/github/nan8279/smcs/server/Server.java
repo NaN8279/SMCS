@@ -1,9 +1,12 @@
 package io.github.nan8279.smcs.server;
 
 import io.github.nan8279.smcs.config.Config;
+import io.github.nan8279.smcs.event_manager.EventHandler;
 import io.github.nan8279.smcs.event_manager.EventManager;
+import io.github.nan8279.smcs.event_manager.events.Event;
 import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
 import io.github.nan8279.smcs.exceptions.*;
+import io.github.nan8279.smcs.CPE.Extension;
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.logger.Logger;
@@ -115,6 +118,8 @@ public class Server {
         this.name = name;
         this.MOTD = MOTD;
         level = lvl;
+
+        getEventManager().addEventHandler(new ExtensionEventCaller());
     }
 
     public void addDelayedBlockUpdate(SetBlockEvent blockUpdate, int delay) {
@@ -275,6 +280,18 @@ public class Server {
                 continue;
             }
             delayedBlockUpdates.replace(delayedUpdate, delayedBlockUpdates.get(delayedUpdate) - 1);
+        }
+    }
+
+    static class ExtensionEventCaller implements EventHandler {
+
+        @Override
+        public void onEvent(Event event) {
+            if (event.getPlayer().supportsCPE()) {
+                for (Extension extension : Extension.values()) {
+                    extension.getExtension().onEvent(event);
+                }
+            }
         }
     }
 }

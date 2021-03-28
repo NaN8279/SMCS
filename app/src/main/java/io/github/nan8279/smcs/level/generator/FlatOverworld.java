@@ -2,7 +2,6 @@ package io.github.nan8279.smcs.level.generator;
 
 import io.github.nan8279.smcs.level.ServerLevel;
 import io.github.nan8279.smcs.level.blocks.Block;
-import io.github.nan8279.smcs.position.BlockPosition;
 
 import java.util.Random;
 
@@ -16,10 +15,18 @@ public class FlatOverworld extends FlatWorld {
         int maxOreLevel = (ySize / 2) - 10;
         Random random = new Random(seed);
 
-        Overworld.generateWater(level, ySize / 2);
-        Overworld.generateTrees(level, random);
-        Overworld.generateFlowerFields(level, random);
-        Overworld.generateOres(level, random, maxOreLevel);
+        Overworld.generateLiquid(level, ySize / 2, Block.WATER);
+
+        for (short x = 0; x < xSize; x++) {
+            for (short z = 0; z < zSize; z++) {
+                Overworld.generateTrees(level, random, x, z, 150);
+                Overworld.generateFlowerFields(level, random, x, z);
+
+                for (short y = 0; y < maxOreLevel; y++) {
+                    Overworld.generateOres(level, random, x, y, z);
+                }
+            }
+        }
 
         return level;
     }

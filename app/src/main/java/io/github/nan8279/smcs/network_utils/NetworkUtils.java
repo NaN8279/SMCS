@@ -1,5 +1,6 @@
 package io.github.nan8279.smcs.network_utils;
 
+import io.github.nan8279.smcs.CPE.ExtensionClientPacket;
 import io.github.nan8279.smcs.exceptions.*;
 import io.github.nan8279.smcs.network_utils.packets.ClientBoundPacket;
 import io.github.nan8279.smcs.network_utils.packets.ClientPacket;
@@ -37,6 +38,13 @@ public class NetworkUtils {
         try {
             packetObj = ClientPacket.getPacket(packetID).packet.getClass().getDeclaredConstructor().
                     newInstance();
+        } catch (InvalidPacketIDException invalidPacketIDException) {
+            try {
+                packetObj = ExtensionClientPacket.getPacket(packetID).packet.getClass().getDeclaredConstructor().
+                        newInstance();
+            } catch (Exception exception) {
+                return null;
+            }
         } catch (Exception exception) {
             return null;
         }
@@ -109,7 +117,9 @@ public class NetworkUtils {
         return bytes.array();
     }
 
-    public static byte integerToByte(int b) {
-        return (byte) b;
+    public static byte[] intToBytes(int i) {
+        ByteBuffer bytes = ByteBuffer.allocate(4);
+        bytes.putInt(i);
+        return bytes.array();
     }
 }

@@ -15,7 +15,7 @@ public class NPC {
 
     public NPC(String name, PlayerPosition spawnPos, Server server) {
         username = name;
-        playerId = (byte) ThreadLocalRandom.current().nextInt(128);
+        playerId = (byte) ThreadLocalRandom.current().nextInt(-127, 128);
         pos = spawnPos;
         this.server = server;
     }
