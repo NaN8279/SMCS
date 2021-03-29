@@ -8,6 +8,9 @@ import io.github.nan8279.smcs.server.Server;
 
 import java.util.HashMap;
 
+/**
+ * Structure generator. Used to generate structures like trees in levels.
+ */
 public abstract class StructureGenerator {
     final private HashMap<BlockPosition, Block> blocksToGenerate;
 
@@ -15,6 +18,14 @@ public abstract class StructureGenerator {
         this.blocksToGenerate = blocksToGenerate;
     }
 
+    /**
+     * Test if this structure can generate at the given position in the given level.
+     *
+     * @param level the level.
+     * @param position the position.
+     * @param canSpawnInBlocks if this structure can spawn in blocks.
+     * @return true when the structure can spawn.
+     */
     private boolean canGenerateStructure(ServerLevel level, BlockPosition position,
                                          boolean canSpawnInBlocks) {
         for (BlockPosition relativeStructurePosition : blocksToGenerate.keySet()) {
@@ -43,6 +54,14 @@ public abstract class StructureGenerator {
         return true;
     }
 
+    /**
+     * Generates this structure on a server.
+     *
+     * @param server the server.
+     * @param position the position to generate this structure at.
+     * @param canSpawnInBlocks if this structure can spawn in blocks.
+     * @throws NoSpaceForStructureException when there is no space for this structure to generate.
+     */
     public void generateStructure(Server server, BlockPosition position,
                                   boolean canSpawnInBlocks) throws NoSpaceForStructureException {
         if (!canGenerateStructure(server.getLevel(), position, canSpawnInBlocks)) {
@@ -59,6 +78,14 @@ public abstract class StructureGenerator {
         }
     }
 
+    /**
+     * Generates this structure in a level.
+     *
+     * @param level the level.
+     * @param position the position to generate this structure at.
+     * @param canSpawnInBlocks if this structure can spawn in blocks.
+     * @throws NoSpaceForStructureException when there is no space for this structure to generate.
+     */
     public void generateStructureForLevel(ServerLevel level, BlockPosition position,
                                           boolean canSpawnInBlocks)
             throws NoSpaceForStructureException {

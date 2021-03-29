@@ -1,16 +1,20 @@
 package io.github.nan8279.smcs.network_utils.packets.serverbound_packets;
 
 import io.github.nan8279.smcs.exceptions.StringToBigToConvertException;
-import io.github.nan8279.smcs.network_utils.NetworkUtils;
+import io.github.nan8279.smcs.network_utils.ServerPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 
-import java.util.ArrayList;
-
+/**
+ * Server message packet.
+ */
 public class ServerMessagePacket implements ServerBoundPacket {
-    final private byte[] message;
+    final private String message;
 
-    public ServerMessagePacket(String message) throws StringToBigToConvertException {
-        this.message = NetworkUtils.generateString(message);
+    /**
+     * @param message the message to send.
+     */
+    public ServerMessagePacket(String message) {
+        this.message = message;
     }
 
     @Override
@@ -19,13 +23,12 @@ public class ServerMessagePacket implements ServerBoundPacket {
     }
 
     @Override
-    public ArrayList<Byte> returnFields() {
-        ArrayList<Byte> packet = new ArrayList<>();
-        packet.add((byte) 0);
+    public ServerPacket returnPacket() throws StringToBigToConvertException {
+        ServerPacket packet = new ServerPacket();
 
-        for (Byte b : message) {
-            packet.add(b);
-        }
+        packet.addByte((byte) 0);
+        packet.addString(message);
+
         return packet;
     }
 }

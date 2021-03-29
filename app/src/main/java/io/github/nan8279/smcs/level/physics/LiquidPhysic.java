@@ -6,9 +6,15 @@ import io.github.nan8279.smcs.position.BlockPosition;
 
 import java.util.ArrayList;
 
+/**
+ * Makes liquids flow.
+ */
 public class LiquidPhysic implements Physic {
     final private int updateDelay;
 
+    /**
+     * @param updateDelay how fast the liquid flows.
+     */
     public LiquidPhysic(int updateDelay) {
         this.updateDelay = updateDelay;
     }

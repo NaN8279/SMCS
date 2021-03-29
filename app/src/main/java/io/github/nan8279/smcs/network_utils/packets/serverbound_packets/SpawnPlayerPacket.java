@@ -1,26 +1,30 @@
 package io.github.nan8279.smcs.network_utils.packets.serverbound_packets;
 
 import io.github.nan8279.smcs.exceptions.StringToBigToConvertException;
-import io.github.nan8279.smcs.network_utils.NetworkUtils;
+import io.github.nan8279.smcs.network_utils.ServerPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 import io.github.nan8279.smcs.player.NPC;
 import io.github.nan8279.smcs.position.PlayerPosition;
 
-import java.util.ArrayList;
-
+/**
+ * Spawn player packet.
+ */
 public class SpawnPlayerPacket implements ServerBoundPacket {
     final private byte playerID;
-    final private byte[] username;
+    final private String username;
     final private PlayerPosition playerPosition;
 
-    public SpawnPlayerPacket(NPC npc,
-                             boolean thisPlayer) throws StringToBigToConvertException {
+    /**
+     * @param npc the npc being spawned.
+     * @param thisPlayer if the packet is send to the npc being spawned.
+     */
+    public SpawnPlayerPacket(NPC npc, boolean thisPlayer) {
         if (thisPlayer) {
             playerID = -1;
         } else {
             playerID = npc.getPlayerId();
         }
-        this.username = NetworkUtils.generateString(npc.getUsername());
+        this.username = npc.getUsername();
         this.playerPosition = npc.getPos();
     }
 
@@ -30,26 +34,18 @@ public class SpawnPlayerPacket implements ServerBoundPacket {
     }
 
     @Override
-    public ArrayList<Byte> returnFields() {
-        ArrayList<Byte> packet = new ArrayList<>();
+    public ServerPacket returnPacket() throws StringToBigToConvertException {
+        ServerPacket packet = new ServerPacket();
 
-        packet.add(playerID);
+        packet.addByte(playerID);
+        packet.addString(username);
 
-        for (Byte b : username) {
-            packet.add(b);
-        }
+        packet.addShort((short) (playerPosition.getPosX() * 32));
+        packet.addShort((short) (playerPosition.getPosY() * 32 + 51));
+        packet.addShort((short) (playerPosition.getPosX() * 32));
 
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosX() * 32))[0]);
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosX() * 32))[1]);
-
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosY() * 32 + 51))[0]);
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosY() * 32 + 51))[1]);
-
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosZ() * 32))[0]);
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosZ() * 32))[1]);
-
-        packet.add(playerPosition.getYaw());
-        packet.add(playerPosition.getPitch());
+        packet.addByte(playerPosition.getYaw());
+        packet.addByte(playerPosition.getPitch());
 
         return packet;
     }

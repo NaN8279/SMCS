@@ -6,11 +6,12 @@ import io.github.nan8279.smcs.exceptions.ClientDisconnectedException;
 import io.github.nan8279.smcs.level.generator.TerrainGenerator;
 import io.github.nan8279.smcs.level.generator.indev_map_themes.Hell;
 import io.github.nan8279.smcs.level.generator.indev_map_themes.Woods;
-import io.github.nan8279.smcs.network_utils.NetworkUtils;
+import io.github.nan8279.smcs.network_utils.ServerPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 
-import java.util.ArrayList;
-
+/**
+ * The EnvColors CPE extension.
+ */
 public class EnvColorsExtension extends AbstractExtension {
 
     public EnvColorsExtension() {
@@ -37,12 +38,21 @@ public class EnvColorsExtension extends AbstractExtension {
         } catch (ClientDisconnectedException ignored) {}
     }
 
+    /**
+     * EnvSetColor packet.
+     */
     static class EnvSetColorPacket implements ServerBoundPacket {
         final private Variable variable;
         final private short red;
         final private short green;
         final private short blue;
 
+        /**
+         * @param variable what variable the client needs to set the color for.
+         * @param red red color.
+         * @param green green color.
+         * @param blue blue color.
+         */
         EnvSetColorPacket(Variable variable, short red, short green, short blue) {
             this.variable = variable;
             this.red = red;
@@ -56,23 +66,21 @@ public class EnvColorsExtension extends AbstractExtension {
         }
 
         @Override
-        public ArrayList<Byte> returnFields() {
-            ArrayList<Byte> fields = new ArrayList<>();
+        public ServerPacket returnPacket() {
+            ServerPacket packet = new ServerPacket();
 
-            fields.add(variable.value);
+            packet.addByte(variable.value);
 
-            fields.add(NetworkUtils.shortToBytes(red)[0]);
-            fields.add(NetworkUtils.shortToBytes(red)[1]);
+            packet.addShort(red);
+            packet.addShort(green);
+            packet.addShort(blue);
 
-            fields.add(NetworkUtils.shortToBytes(green)[0]);
-            fields.add(NetworkUtils.shortToBytes(green)[1]);
-
-            fields.add(NetworkUtils.shortToBytes(blue)[0]);
-            fields.add(NetworkUtils.shortToBytes(blue)[1]);
-
-            return fields;
+            return packet;
         }
 
+        /**
+         * Different variables the client can set a color for.
+         */
         enum Variable {
             SKY_COLOR((byte) 0),
             CLOUD_COLOR((byte) 1),

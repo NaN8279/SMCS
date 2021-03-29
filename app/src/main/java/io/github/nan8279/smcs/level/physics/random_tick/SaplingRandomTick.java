@@ -5,6 +5,9 @@ import io.github.nan8279.smcs.level.structures.Tree;
 import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.server.Server;
 
+/**
+ * Random tick on the SAPLING block.
+ */
 public class SaplingRandomTick implements RandomTick {
 
     @Override

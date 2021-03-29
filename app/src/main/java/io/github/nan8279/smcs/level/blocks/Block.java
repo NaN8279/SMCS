@@ -7,6 +7,9 @@ import io.github.nan8279.smcs.level.physics.random_tick.GrassRandomTick;
 import io.github.nan8279.smcs.level.physics.random_tick.RandomTick;
 import io.github.nan8279.smcs.level.physics.random_tick.SaplingRandomTick;
 
+/**
+ * Lists all the blocks (and their properties) the server supports.
+ */
 public enum Block {
     AIR(0, null, false),
     STONE(1),
@@ -69,11 +72,29 @@ public enum Block {
     MOSSY_COBBLESTONE(48),
     OBSIDIAN(49);
 
+    /**
+     * The block's random tick action. Can be null.
+     */
     final public RandomTick randomTick;
+    /**
+     * The block's physic. Can be null.
+     */
     final public Physic physic;
+    /**
+     * True if the block is solid.
+     */
     final public boolean solid;
+    /**
+     * True if the block blocks light.
+     */
     final public boolean blocksLight;
+    /**
+     * True if the block is a liquid.
+     */
     final public boolean liquid;
+    /**
+     * True if the block is a flower.
+     */
     final public boolean small;
     final public byte blockID;
 
@@ -128,6 +149,13 @@ public enum Block {
         this.small = false;
     }
 
+    /**
+     * Returns a block from the block's ID.
+     *
+     * @param blockID the block's ID to look for.
+     * @return the block with the ID.
+     * @throws InvalidBlockIDException when the block could not have been found.
+     */
     public static Block fromID(int blockID) throws InvalidBlockIDException {
         for(Block block : Block.values()) {
             if (block.blockID == blockID) {

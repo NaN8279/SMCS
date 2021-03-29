@@ -52,7 +52,9 @@ public class InfoCommandHandler implements CommandHandler {
                         "IP address: " + ((Player) onlinePlayer).getIPAddress() + "\n" +
                         "Position: " + position + "\n" +
                         "Block holding (inaccurate): " + blockHolding + "\n" +
-                        "Client (only works properly with CPE on): " + ((Player) onlinePlayer).getClient();
+                        "Client (only works properly with CPE on): " + ((Player) onlinePlayer).getClient() + "\n" +
+                        "Ping (only works with CPE clients and CPE on): " +
+                                ((Player) onlinePlayer).getPing() + "ms";
 
                 for (String part : message.split("\n")) {
                     try {

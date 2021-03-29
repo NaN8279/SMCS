@@ -6,13 +6,25 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class Packet {
+/**
+ * Used to turn raw bytes from a packet into a {@link io.github.nan8279.smcs.network_utils.packets.ClientBoundPacket}.
+ */
+public class ClientPacket {
     final private DataInputStream stream;
 
-    public Packet(DataInputStream stream) {
+    /**
+     * @param stream the stream the packet is on.
+     */
+    public ClientPacket(DataInputStream stream) {
         this.stream = stream;
     }
 
+    /**
+     * Reads a byte from the packet.
+     *
+     * @return the byte read.
+     * @throws InvalidPacketException when an IOException occurs.
+     */
     public byte readByte() throws InvalidPacketException {
         try {
             return stream.readByte();
@@ -21,6 +33,12 @@ public class Packet {
         }
     }
 
+    /**
+     * Reads a short from the packet.
+     *
+     * @return the short read.
+     * @throws InvalidPacketException when an IOException occurs.
+     */
     public short readShort() throws InvalidPacketException {
         try {
             return stream.readShort();
@@ -29,6 +47,12 @@ public class Packet {
         }
     }
 
+    /**
+     * Reads an integer from the packet.
+     *
+     * @return the integer read.
+     * @throws InvalidPacketException when an IOException occurs.
+     */
     public int readInt() throws InvalidPacketException {
         try {
             return stream.readInt();
@@ -37,6 +61,12 @@ public class Packet {
         }
     }
 
+    /**
+     * Reads a byte array from the packet.
+     *
+     * @return the byte array read.
+     * @throws InvalidPacketException when an IOException occurs.
+     */
     public byte[] readByteArray() throws InvalidPacketException {
         try {
             byte[] byteArray = new byte[1024];
@@ -47,6 +77,12 @@ public class Packet {
         }
     }
 
+    /**
+     * Reads a string from the packet.
+     *
+     * @return the read string.
+     * @throws InvalidPacketException when an IOException occurs.
+     */
     public String readString() throws InvalidPacketException {
         try {
             byte[] stringBytes = new byte[64];

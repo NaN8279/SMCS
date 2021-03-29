@@ -3,7 +3,6 @@ package io.github.nan8279.smcs.network_utils;
 import io.github.nan8279.smcs.CPE.ExtensionClientPacket;
 import io.github.nan8279.smcs.exceptions.*;
 import io.github.nan8279.smcs.network_utils.packets.ClientBoundPacket;
-import io.github.nan8279.smcs.network_utils.packets.ClientPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 
 import java.io.DataInputStream;
@@ -14,8 +13,22 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
+/**
+ * Used to communicate with the client.
+ */
 public class NetworkUtils {
 
+    /**
+     * Reads a packet from a client socket.
+     *
+     * @param socket the socket to read from.
+     * @param timeout the client timeout.
+     * @return the packet read.
+     * @throws IOException when an error occurs while reading a packet.
+     * @throws TimeoutReachedException when the given timeout is reached.
+     * @throws InvalidPacketException when the client send an invalid packet.
+     * @throws InvalidPacketIDException when the client send an invalid packet.
+     */
     public static ClientBoundPacket readPacket(Socket socket, int timeout) throws IOException,
         TimeoutReachedException,
         InvalidPacketException, InvalidPacketIDException {
@@ -36,7 +49,7 @@ public class NetworkUtils {
         int packetID = stream.readByte();
         ClientBoundPacket packetObj;
         try {
-            packetObj = ClientPacket.getPacket(packetID).packet.getClass().getDeclaredConstructor().
+            packetObj = io.github.nan8279.smcs.network_utils.packets.ClientPacket.getPacket(packetID).packet.getClass().getDeclaredConstructor().
                     newInstance();
         } catch (InvalidPacketIDException invalidPacketIDException) {
             try {
@@ -49,18 +62,25 @@ public class NetworkUtils {
             return null;
         }
 
-        Packet packet = new Packet(stream);
-        packetObj.fromPacket(packet);
+        ClientPacket clientPacket = new ClientPacket(stream);
+        packetObj.fromPacket(clientPacket);
         return packetObj;
     }
 
+    /**
+     * Sends a packet to the given client socket.
+     *
+     * @param socket the socket to send the packet to.
+     * @param packet the packet to send.
+     * @throws ClientDisconnectedException when an error occurs while sending the packet.
+     */
     public static void sendPacket(Socket socket, ServerBoundPacket packet) throws ClientDisconnectedException {
         try {
             DataOutputStream stream = new DataOutputStream(socket.getOutputStream());
 
             ArrayList<Byte> payload = new ArrayList<>();
             payload.add(packet.returnPacketID());
-            payload.addAll(packet.returnFields());
+            payload.addAll(packet.returnPacket().getFields());
 
             byte[] bytes = new byte[payload.size()];
             int i = 0;
@@ -70,11 +90,19 @@ public class NetworkUtils {
             }
 
             stream.write(bytes);
-        } catch (IOException exception) {
+        } catch (IOException | StringToBigToConvertException |
+                ByteArrayToBigToConvertException exception) {
             throw new ClientDisconnectedException();
         }
     }
 
+    /**
+     * Turns a string into a valid byte array to send to the user.
+     *
+     * @param string the string to turn into a byte array.
+     * @return the string turned into a valid byte array.
+     * @throws StringToBigToConvertException when the string is to big for the byte array.
+     */
     public static byte[] generateString(String string) throws StringToBigToConvertException {
         if (string.length() > 64){
             throw new StringToBigToConvertException();
@@ -85,6 +113,13 @@ public class NetworkUtils {
         return string.getBytes(StandardCharsets.US_ASCII);
     }
 
+    /**
+     * Turns a byte array into a valid byte array to send to the user.
+     *
+     * @param byteArray the byte array.
+     * @return the byte array turned into a valid byte array.
+     * @throws ByteArrayToBigToConvertException when the byte array is too big.
+     */
     public static byte[] generateByteArray(byte[] byteArray) throws ByteArrayToBigToConvertException {
         ArrayList<Byte> newByteArray = new ArrayList<>();
 
@@ -111,12 +146,24 @@ public class NetworkUtils {
         return finalByteArray;
     }
 
+    /**
+     * Turns a short into a valid byte array to send to the user.
+     *
+     * @param s the short to turn into a byte array.
+     * @return the short turned into a valid byte array.
+     */
     public static byte[] shortToBytes(short s) {
         ByteBuffer bytes = ByteBuffer.allocate(2);
         bytes.putShort(s);
         return bytes.array();
     }
 
+    /**
+     * Turns an integer into a valid byte array to send to the user.
+     *
+     * @param i the integer to turn into a byte array.
+     * @return the integer turned into a valid byte array.
+     */
     public static byte[] intToBytes(int i) {
         ByteBuffer bytes = ByteBuffer.allocate(4);
         bytes.putInt(i);

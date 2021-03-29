@@ -7,6 +7,9 @@ import io.github.nan8279.smcs.position.BlockPosition;
 
 import java.util.Random;
 
+/**
+ * Indev paradise map theme.
+ */
 public class Paradise extends Overworld {
 
     private void generateBeaches(ServerLevel level, int waterLevel) {

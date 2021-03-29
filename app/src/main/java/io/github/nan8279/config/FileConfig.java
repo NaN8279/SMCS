@@ -1,4 +1,4 @@
-package io.github.nan8279.classic_server.config;
+package io.github.nan8279.config;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -4,6 +4,9 @@ import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.server.Server;
 
+/**
+ * Random tick on the GRASS block.
+ */
 public class GrassRandomTick implements RandomTick {
 
     @Override

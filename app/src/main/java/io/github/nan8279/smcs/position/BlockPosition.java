@@ -1,5 +1,8 @@
 package io.github.nan8279.smcs.position;
 
+/**
+ * Used to store a block position.
+ */
 public class BlockPosition {
     final private short posX;
     final private short posY;

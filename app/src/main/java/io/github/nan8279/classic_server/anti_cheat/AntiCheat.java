@@ -1,6 +1,6 @@
 package io.github.nan8279.classic_server.anti_cheat;
 
-import io.github.nan8279.classic_server.config.FileConfig;
+import io.github.nan8279.config.FileConfig;
 import io.github.nan8279.smcs.CPE.extensions.HackControlExtension;
 import io.github.nan8279.smcs.event_manager.EventHandler;
 import io.github.nan8279.smcs.server.Server;

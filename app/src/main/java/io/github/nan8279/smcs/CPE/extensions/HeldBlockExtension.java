@@ -10,6 +10,9 @@ import io.github.nan8279.smcs.player.Player;
 
 import java.util.HashMap;
 
+/**
+ * The HeldBlock CPE extension.
+ */
 public class HeldBlockExtension extends AbstractExtension {
     final private static HashMap<Player, Block> heldBlocks = new HashMap<>();
 
@@ -17,6 +20,12 @@ public class HeldBlockExtension extends AbstractExtension {
         super("HeldBlock", 1);
     }
 
+    /**
+     * Returns the block a player is holding. Only works for players supporting CPE.
+     *
+     * @param player the player.
+     * @return the block the given player is holding.
+     */
     public static Block getBlockHolding(Player player) {
         return heldBlocks.get(player);
     }

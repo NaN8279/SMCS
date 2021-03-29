@@ -1,21 +1,26 @@
 package io.github.nan8279.smcs.network_utils.packets.serverbound_packets;
 
-import io.github.nan8279.smcs.network_utils.NetworkUtils;
+import io.github.nan8279.smcs.network_utils.ServerPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 import io.github.nan8279.smcs.player.NPC;
 import io.github.nan8279.smcs.position.PlayerPosition;
 
-import java.util.ArrayList;
-
+/**
+ * Server position packet.
+ */
 public class ServerPositionPacket implements ServerBoundPacket {
     final private byte playerID;
     final private PlayerPosition playerPosition;
 
-    public ServerPositionPacket(NPC NPC, PlayerPosition playerPosition) {
-        if (NPC == null) {
+    /**
+     * @param npc the npc that is being positioned.
+     * @param playerPosition the new player position.
+     */
+    public ServerPositionPacket(NPC npc, PlayerPosition playerPosition) {
+        if (npc == null) {
             playerID = -1;
         } else {
-            playerID = NPC.getPlayerId();
+            playerID = npc.getPlayerId();
         }
         this.playerPosition = playerPosition;
     }
@@ -26,20 +31,17 @@ public class ServerPositionPacket implements ServerBoundPacket {
     }
 
     @Override
-    public ArrayList<Byte> returnFields() {
-        ArrayList<Byte> packet = new ArrayList<>();
-        packet.add(playerID);
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosX() * 32))[0]);
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosX() * 32))[1]);
+    public ServerPacket returnPacket() {
+        ServerPacket packet = new ServerPacket();
 
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosY() * 32 + 51))[0]);
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosY() * 32 + 51))[1]);
+        packet.addByte(playerID);
 
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosZ() * 32))[0]);
-        packet.add(NetworkUtils.shortToBytes((short) (playerPosition.getPosZ() * 32))[1]);
+        packet.addShort((short) (playerPosition.getPosX() * 32));
+        packet.addShort((short) (playerPosition.getPosY() * 32 + 51));
+        packet.addShort((short) (playerPosition.getPosX() * 32));
 
-        packet.add(playerPosition.getYaw());
-        packet.add(playerPosition.getPitch());
+        packet.addByte(playerPosition.getYaw());
+        packet.addByte(playerPosition.getPitch());
 
         return packet;
     }

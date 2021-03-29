@@ -5,6 +5,9 @@ import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.server.Server;
 
+/**
+ * Double slab physic. Turns slabs into double slabs when a slab block is above another slab block.
+ */
 public class DoubleSlabPhysic implements Physic {
 
     @Override

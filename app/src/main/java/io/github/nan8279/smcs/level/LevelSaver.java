@@ -8,8 +8,18 @@ import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * Used to save a {@link ServerLevel} to a file.
+ */
 public class LevelSaver {
 
+    /**
+     * Saves the given server level to the given path.
+     *
+     * @param level the level to save.
+     * @param path the path to save the level to.
+     * @throws IOException when something goes wrong while saving the level.
+     */
     public static void saveLevel(ServerLevel level, String path) throws IOException {
         if (!Files.exists(Path.of(path))) {
             Files.createFile(Path.of(path));
@@ -36,6 +46,13 @@ public class LevelSaver {
         Files.write(Path.of(path), payload);
     }
 
+    /**
+     * Reads a server level from the given path.
+     *
+     * @param path the path to read the server level from.
+     * @return the server level read.
+     * @throws IOException when something goes wrong while reading the given level.
+     */
     public static ServerLevel readLevel(String path) throws IOException {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(Files.readAllBytes(Path.of(path)));
 

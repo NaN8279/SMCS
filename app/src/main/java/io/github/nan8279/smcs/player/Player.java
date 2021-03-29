@@ -1,5 +1,7 @@
 package io.github.nan8279.smcs.player;
 
+import io.github.nan8279.smcs.CPE.AbstractExtension;
+import io.github.nan8279.smcs.CPE.Extension;
 import io.github.nan8279.smcs.CPE.extensions.TwoWayPingExtension;
 import io.github.nan8279.smcs.config.Config;
 import io.github.nan8279.smcs.event_manager.events.MessageEvent;
@@ -7,8 +9,6 @@ import io.github.nan8279.smcs.event_manager.events.PlayerJoinEvent;
 import io.github.nan8279.smcs.event_manager.events.PlayerMoveEvent;
 import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
 import io.github.nan8279.smcs.exceptions.*;
-import io.github.nan8279.smcs.CPE.AbstractExtension;
-import io.github.nan8279.smcs.CPE.Extension;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.network_utils.NetworkUtils;
 import io.github.nan8279.smcs.network_utils.packets.ClientBoundPacket;
@@ -23,28 +23,61 @@ import io.github.nan8279.smcs.server.Server;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.time.LocalTime;
 import java.util.HashMap;
 
+/**
+ * A player on the server.
+ */
 public class Player extends NPC {
     final private Socket socket;
     private boolean fullyJoined = false;
     private boolean supportsCPE = false;
     private String client = "Vanilla";
     private TickPlayer tickThread;
+    private LocalTime pingSentTime;
+    private short pingData;
+    private int ping;
 
+    /**
+     * @param name the name of the player.
+     * @param s the socket used to communicate with the player.
+     * @param spawnPos the position the player is spawned at.
+     * @param server the server the player is in.
+     */
     public Player(String name, Socket s, PlayerPosition spawnPos, Server server) {
         super(name, spawnPos, server);
         socket = s;
     }
 
+    /**
+     * @return the ping with the player, in milliseconds. Only works when the player supports CPE.
+     */
+    public int getPing() {
+        return ping;
+    }
+
+    /**
+     * @return the client of the player.
+     */
     public String getClient() {
         return client;
     }
 
+    /**
+     * @return if the player supports CPE.
+     */
     public boolean supportsCPE() {
         return supportsCPE;
     }
 
+    /**
+     * Initializes the player.
+     *
+     * @param joinPacket the packet the player used to join.
+     * @throws StringToBigToConvertException never.
+     * @throws ClientDisconnectedException when the player disconnected.
+     */
     public void initialize(PlayerIdentificationPacket joinPacket)
             throws StringToBigToConvertException, ClientDisconnectedException {
         ServerIdentificationPacket identificationPacket = new ServerIdentificationPacket(
@@ -122,18 +155,35 @@ public class Player extends NPC {
         getServer().getEventManager().runEvent(playerJoinEvent);
     }
 
+    /**
+     * @return the IP address of the player.
+     */
     public String getIPAddress() {
         return socket.getInetAddress().getHostAddress();
     }
 
+    /**
+     * @return the join message send when the player joins.
+     */
     public String getJoinMessage() {
         return Config.generateJoinMessage(this);
     }
 
+    /**
+     * Sends a packet to the player.
+     *
+     * @param p the packet to send.
+     * @throws ClientDisconnectedException when the player disconnected.
+     */
     public void send(ServerBoundPacket p) throws ClientDisconnectedException {
         NetworkUtils.sendPacket(socket, p);
     }
 
+    /**
+     * Handles packets the player send.
+     *
+     * @throws ClientDisconnectedException when the player disconnected.
+     */
     void handlePackets() throws ClientDisconnectedException {
         ClientBoundPacket packet;
 
@@ -156,11 +206,11 @@ public class Player extends NPC {
 
             getServer().getEventManager().runEvent(moveEvent);
 
-            if (moveEvent.isCancelled()) {
+            if (moveEvent.isCanceled() ||
+                    moveEvent.getNewPosition() != ((ClientPositionPacket) packet).getPlayerPosition()) {
                 send(new ServerPositionPacket(null, moveEvent.getNewPosition()));
-            } else {
-                setPos(moveEvent.getNewPosition());
             }
+            setPos(moveEvent.getNewPosition());
         } else if (packet instanceof ClientSetBlockPacket){
             Block block = ((ClientSetBlockPacket) packet).getMode() == 1 ?
                     ((ClientSetBlockPacket) packet).getBlockHolding() : Block.AIR;
@@ -189,30 +239,57 @@ public class Player extends NPC {
                 getServer().sendMessage(Config.generateChatMessage(this, messageEvent.getMessage()));
             }
         } else if (packet instanceof TwoWayPingExtension.TwoWayPingClientPacket) {
+
             if (((TwoWayPingExtension.TwoWayPingClientPacket) packet).getDirection() == 0) {
                 send(new TwoWayPingExtension.TwoWayPingServerPacket(
                         (byte) 0,
                         ((TwoWayPingExtension.TwoWayPingClientPacket) packet).getData()
                 ));
+            } else if (((TwoWayPingExtension.TwoWayPingClientPacket) packet).getData() == pingData) {
+                LocalTime currentTime = LocalTime.now();
+                ping = (currentTime.getNano() - pingSentTime.getNano()) / 1000000;
             }
         }
 
     }
 
-    public void sendMessage(String message) throws ClientDisconnectedException, StringToBigToConvertException {
+    /**
+     * Sends a chat message to the player.
+     *
+     * @param message the message to send.
+     * @throws ClientDisconnectedException when the player disconnected.
+     * @throws StringToBigToConvertException when the message is too big.
+     */
+    public void sendMessage(String message)
+            throws ClientDisconnectedException, StringToBigToConvertException {
         send(new ServerMessagePacket(message));
     }
 
+    /**
+     * Receives a packet from the player.
+     *
+     * @return the packet received.
+     * @throws InvalidPacketException when the player send an invalid packet.
+     * @throws TimeoutReachedException when the timeout has been reached.
+     * @throws InvalidPacketIDException when the player send an invalid packet.
+     * @throws IOException when an error occurred while sending the packet to the player.
+     */
     private ClientBoundPacket receive() throws InvalidPacketException,
             TimeoutReachedException, InvalidPacketIDException, IOException {
         return NetworkUtils.readPacket(socket, 3000);
     }
 
+    /**
+     * @return true when the player is fully initialized.
+     */
     public boolean isFullyJoined() {
         return fullyJoined;
     }
 
-    public void setFullyJoined(boolean fullyJoined) {
+    /**
+     * @param fullyJoined if the player is fully initialized.
+     */
+    private void setFullyJoined(boolean fullyJoined) {
         this.fullyJoined = fullyJoined;
     }
 
@@ -236,21 +313,53 @@ public class Player extends NPC {
         tickThread.tick();
     }
 
+    /**
+     * Starts the player tick thread.
+     */
     public void startTickThread() {
         tickThread = new TickPlayer(this);
         tickThread.start();
     }
 
+    /**
+     * Stops the player tick thread.
+     */
     public void stopTickThread() {
         tickThread.interrupt();
     }
+
+    /**
+     * Sends a ping packet to the player.
+     *
+     * @throws ClientDisconnectedException when the player disconnected.
+     */
+    void sendPing() throws ClientDisconnectedException {
+        if (supportsCPE()) {
+            TwoWayPingExtension.TwoWayPingServerPacket pingPacket =
+                    new TwoWayPingExtension.TwoWayPingServerPacket();
+
+            pingData = pingPacket.getData();
+            pingSentTime = LocalTime.now();
+            send(pingPacket);
+        } else {
+            send(new PingPacket());
+        }
+    }
 }
 
+/**
+ * Used to tick the player.
+ *
+ * This executes in a separate thread for each player to increase server performance.
+ */
 class TickPlayer extends Thread {
     final private Player player;
     private boolean needsTick = false;
-    private int ping = 0;
+    private int pingTick = 0;
 
+    /**
+     * @param player the player to tick.
+     */
     public TickPlayer(Player player) {
         this.player = player;
     }
@@ -265,20 +374,16 @@ class TickPlayer extends Thread {
                 continue;
             }
 
-            if (ping == 10) {
+            if (pingTick == 10) {
                 try {
-                    if (player.supportsCPE()) {
-                        player.send(new TwoWayPingExtension.TwoWayPingServerPacket());
-                    } else {
-                        player.send(new PingPacket());
-                    }
+                    player.sendPing();
                 } catch (ClientDisconnectedException e) {
                     try {
                         player.disconnect(Config.DEFAULT_DISCONNECT_REASON, false);
                     } catch (StringToBigToConvertException ignored){}
                     return;
                 }
-                ping = 0;
+                pingTick = 0;
             }
 
             try {
@@ -291,10 +396,13 @@ class TickPlayer extends Thread {
             }
 
             needsTick = false;
-            ping++;
+            pingTick++;
         }
     }
 
+    /**
+     * Ticks the player.
+     */
     void tick() {
         this.needsTick = true;
     }

@@ -13,6 +13,9 @@ import io.github.nan8279.smcs.position.BlockPosition;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * Overworld terrain generator.
+ */
 public class Overworld implements TerrainGenerator {
     final private static ArrayList<Block> ores = new ArrayList<>();
     protected Block liquid = Block.WATER;
@@ -20,6 +23,14 @@ public class Overworld implements TerrainGenerator {
     protected int treeGenerateChance = 150;
     protected Block grassBlock = Block.GRASS;
 
+    /**
+     * Generates flower fields at random positions in the level.
+     *
+     * @param level the level.
+     * @param random the random number generator.
+     * @param x the x position of the flower field.
+     * @param z the z position of the flower field.
+     */
     static void generateFlowerFields(ServerLevel level, Random random,
                                      short x, short z) {
         BlockPosition highestBlock = level.getHighestBlockPosition(x, z);
@@ -37,6 +48,15 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
+    /**
+     * Generates trees at random positions in the level.
+     *
+     * @param level the level.
+     * @param random the random number generator.
+     * @param x the x position of the tree.
+     * @param z the z position of the tree.
+     * @param treeGenerateChance the chance of generating a tree.
+     */
     static void generateTrees(ServerLevel level, Random random,
                               short x, short z, int treeGenerateChance) {
         BlockPosition highestBlock = level.getHighestBlockPosition(x, z);
@@ -54,6 +74,15 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
+    /**
+     * Generates ore veins at random positions in the level.
+     *
+     * @param level the level.
+     * @param random the random number generator.
+     * @param x the x position of the ore vein.
+     * @param y the y position of the ore vein.
+     * @param z the z position of the ore vein.
+     */
     static void generateOres(ServerLevel level, Random random,
                              short x, short y, short z) {
         BlockPosition orePosition = new BlockPosition(x, y, z);
@@ -72,6 +101,13 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
+    /**
+     * Generates water in the level.
+     *
+     * @param level the level.
+     * @param waterLevel the water level.
+     * @param liquid the liquid of the level.
+     */
     static void generateLiquid(ServerLevel level, int waterLevel, Block liquid) {
         for (short x = 0; x < level.getLevelWidth(); x++) {
             for (short z = 0; z < level.getLevelDepth(); z++) {
@@ -89,6 +125,12 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
+    /**
+     * Generates grass in the level.
+     *
+     * @param level the level.
+     * @param grassBlock the grass block.
+     */
     static void generateGrass(ServerLevel level, Block grassBlock) {
         for (short x = 0; x < level.getLevelWidth(); x++) {
             for (short z = 0; z < level.getLevelDepth(); z++) {
@@ -101,6 +143,13 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
+    /**
+     * Generates dirt in the level.
+     *
+     * @param level the level.
+     * @param dirtLevel how deep the dirt goes.
+     * @param waterLevel the water level.
+     */
     static void generateDirt(ServerLevel level, int dirtLevel, int waterLevel) {
         for (short x = 0; x < level.getLevelWidth(); x++) {
             for (short z = 0; z < level.getLevelDepth(); z++) {
@@ -118,6 +167,16 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
+    /**
+     * Adds noise to a level.
+     *
+     * @param level the level.
+     * @param seed the seed.
+     * @param xSize the size of the level.
+     * @param ySize the size of the level.
+     * @param zSize the size of the level.
+     * @param baseBlock the block used as base in the level.
+     */
     protected void setNoise(ServerLevel level, long seed,
                             int xSize, int ySize, int zSize, Block baseBlock) {
         Noise noise = new Noise((int) seed);
@@ -136,6 +195,12 @@ public class Overworld implements TerrainGenerator {
         }
     }
 
+    /**
+     * Generates extra structures in a level.
+     *
+     * @param random the random number generator.
+     * @param level the level.
+     */
     protected void generateExtra(Random random, ServerLevel level) {}
 
     @Override

@@ -1,19 +1,25 @@
 package io.github.nan8279.smcs.network_utils.packets.serverbound_packets;
 
 import io.github.nan8279.smcs.exceptions.ByteArrayToBigToConvertException;
-import io.github.nan8279.smcs.network_utils.NetworkUtils;
+import io.github.nan8279.smcs.network_utils.ServerPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 
-import java.util.ArrayList;
-
+/**
+ * Level data chunk packet.
+ */
 public class LevelDataChunkPacket implements ServerBoundPacket {
     final private short chunkLength;
     final private byte[] chunkData;
     final private byte percentComplete;
 
-    public LevelDataChunkPacket(short chunkLength, byte[] chunkData, byte percentComplete) throws ByteArrayToBigToConvertException {
+    /**
+     * @param chunkLength the length of the chunk.
+     * @param chunkData the data of the chunk.
+     * @param percentComplete how much percent is complete in the level loading process.
+     */
+    public LevelDataChunkPacket(short chunkLength, byte[] chunkData, byte percentComplete) {
         this.chunkLength = chunkLength;
-        this.chunkData = NetworkUtils.generateByteArray(chunkData);
+        this.chunkData = chunkData;
         this.percentComplete = percentComplete;
     }
 
@@ -23,14 +29,13 @@ public class LevelDataChunkPacket implements ServerBoundPacket {
     }
 
     @Override
-    public ArrayList<Byte> returnFields() {
-        ArrayList<Byte> packet = new ArrayList<>();
-        packet.add(NetworkUtils.shortToBytes(chunkLength)[0]);
-        packet.add(NetworkUtils.shortToBytes(chunkLength)[1]);
-        for (Byte b : chunkData) {
-            packet.add(b);
-        }
-        packet.add(percentComplete);
+    public ServerPacket returnPacket() throws ByteArrayToBigToConvertException {
+        ServerPacket packet = new ServerPacket();
+
+        packet.addShort(chunkLength);
+        packet.addByteArray(chunkData);
+        packet.addByte(percentComplete);
+
         return packet;
     }
 }

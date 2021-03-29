@@ -6,6 +6,9 @@ import io.github.nan8279.smcs.level.blocks.ValidFlowerBlocks;
 import io.github.nan8279.smcs.position.BlockPosition;
 import io.github.nan8279.smcs.server.Server;
 
+/**
+ * Makes the player unable to place flowers on an invalid flower block.
+ */
 public class FlowerPhysic implements Physic {
 
     @Override

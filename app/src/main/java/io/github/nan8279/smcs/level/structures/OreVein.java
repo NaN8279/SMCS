@@ -12,6 +12,13 @@ public class OreVein extends StructureGenerator {
         super(blocksToGenerate);
     }
 
+    /**
+     * Generates a random ore vein.
+     *
+     * @param random the random number generator.
+     * @param ore the ore.
+     * @return the generated structure.
+     */
     public static OreVein generateOreVein(Random random, Block ore) {
         int oreCount = random.nextInt(8);
         int oresGenerated = 0;

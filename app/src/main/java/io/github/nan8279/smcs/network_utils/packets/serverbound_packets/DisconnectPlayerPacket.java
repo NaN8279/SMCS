@@ -1,16 +1,20 @@
 package io.github.nan8279.smcs.network_utils.packets.serverbound_packets;
 
 import io.github.nan8279.smcs.exceptions.StringToBigToConvertException;
-import io.github.nan8279.smcs.network_utils.NetworkUtils;
+import io.github.nan8279.smcs.network_utils.ServerPacket;
 import io.github.nan8279.smcs.network_utils.packets.ServerBoundPacket;
 
-import java.util.ArrayList;
-
+/**
+ * Disconnect player packet.
+ */
 public class DisconnectPlayerPacket implements ServerBoundPacket {
-    final private byte[] disconnectReason;
+    final private String disconnectReason;
 
-    public DisconnectPlayerPacket(String disconnectReason) throws StringToBigToConvertException {
-        this.disconnectReason = NetworkUtils.generateString(disconnectReason);
+    /**
+     * @param disconnectReason the reason the player has been kicked.
+     */
+    public DisconnectPlayerPacket(String disconnectReason) {
+        this.disconnectReason = disconnectReason;
     }
 
     @Override
@@ -19,11 +23,9 @@ public class DisconnectPlayerPacket implements ServerBoundPacket {
     }
 
     @Override
-    public ArrayList<Byte> returnFields() {
-        ArrayList<Byte> packet = new ArrayList<>();
-        for (Byte b : disconnectReason) {
-            packet.add(b);
-        }
+    public ServerPacket returnPacket() throws StringToBigToConvertException {
+        ServerPacket packet = new ServerPacket();
+        packet.addString(disconnectReason);
         return packet;
     }
 }

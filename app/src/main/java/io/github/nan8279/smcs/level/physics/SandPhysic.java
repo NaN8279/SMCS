@@ -4,7 +4,11 @@ import io.github.nan8279.smcs.event_manager.events.SetBlockEvent;
 import io.github.nan8279.smcs.level.blocks.Block;
 import io.github.nan8279.smcs.position.BlockPosition;
 
+/**
+ * Makes sand fall down.
+ */
 public class SandPhysic implements Physic {
+
     @Override
     public void updateBlock(SetBlockEvent event) {
         BlockPosition blockBelow = new BlockPosition(

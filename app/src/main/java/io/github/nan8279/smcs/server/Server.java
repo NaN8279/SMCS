@@ -25,17 +25,27 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 
+/**
+ * Used to initialize players.
+ *
+ * This happens in a separate thread to increase server performance.
+ */
 class InitializeClient extends Thread{
     final private Server server;
     final private Player player;
     final private PlayerIdentificationPacket joinPacket;
 
+    /**
+     * @param player the player to initialize.
+     * @param joinPacket the join packet the player used to join.
+     */
     public InitializeClient(Player player, PlayerIdentificationPacket joinPacket){
         this.server = player.getServer();
         this.player = player;
         this.joinPacket = joinPacket;
     }
 
+    @Override
     public void run(){
         try {
             player.initialize(joinPacket);
@@ -46,16 +56,26 @@ class InitializeClient extends Thread{
     }
 }
 
+/**
+ * Checks for players wanting to join.
+ *
+ * This happens in a separate thread to increase server performance.
+ */
 class CheckForNewClients extends Thread{
     final private int port;
     final private Server server;
     ServerSocket incomingSocket;
 
-    public CheckForNewClients(Integer serverPort, Server server){
+    /**
+     * @param serverPort the port the server is hosting on.
+     * @param server the server.
+     */
+    public CheckForNewClients(int serverPort, Server server){
         port = serverPort;
         this.server = server;
     }
 
+    @Override
     public void run(){
         while (!server.isStopping()){
             try {
@@ -100,6 +120,9 @@ class CheckForNewClients extends Thread{
     }
 }
 
+/**
+ * A SMCS server.
+ */
 public class Server {
     final private int port;
     final private ArrayList<NPC> onlinePlayers = new ArrayList<>();
@@ -113,6 +136,12 @@ public class Server {
     private boolean stopping = false;
     private CheckForNewClients clientsThread;
 
+    /**
+     * @param lvl the server level.
+     * @param port the post the server is hosting on.
+     * @param name the server's name.
+     * @param MOTD the server's MOTD.
+     */
     public Server(ServerLevel lvl, int port, String name, String MOTD){
         this.port = port;
         this.name = name;
@@ -122,18 +151,37 @@ public class Server {
         getEventManager().addEventHandler(new ExtensionEventCaller());
     }
 
+    /**
+     * Adds a delayed block update.
+     *
+     * @param blockUpdate the block update.
+     * @param delay the delay in ticks.
+     */
     public void addDelayedBlockUpdate(SetBlockEvent blockUpdate, int delay) {
         delayedBlockUpdates.put(blockUpdate, delay);
     }
 
+    /**
+     * @return the name of the server.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return the MOTD of the server.
+     */
     public String getMOTD() {
         return MOTD;
     }
 
+    /**
+     * Bans a player.
+     *
+     * @param playerName the player to ban.
+     * @param reason the reason the player is banned.
+     * @throws StringToBigToConvertException when the reason is too big.
+     */
     public void ban(String playerName, String reason) throws StringToBigToConvertException {
         for (int i = 0; i < onlinePlayers.size(); i++) {
             NPC player = onlinePlayers.get(i);
@@ -150,51 +198,80 @@ public class Server {
         bannedPeople.add(playerName);
     }
 
+    /**
+     * @return a list of banned people.
+     */
     public ArrayList<String> getBannedPeople() {
         return bannedPeople;
     }
 
+    /**
+     * @return a list of online players, including NPCs.
+     */
     public ArrayList<NPC> getOnlinePlayers() {
         return onlinePlayers;
     }
 
+    /**
+     * @return the logger the server uses.
+     */
     public Logger getLogger() {
         return logger;
     }
 
+    /**
+     * @return the level the server uses.
+     */
     public ServerLevel getLevel() {
         return level;
     }
 
+    /**
+     * @return the event manager the server uses.
+     */
     public EventManager getEventManager() {
         return eventManager;
     }
 
+    /**
+     * @return true if the server is stopping.
+     */
     public boolean isStopping() {
         return stopping;
     }
 
+    /**
+     * Runs the server.
+     */
     public void run(){
         clientsThread = new CheckForNewClients(port, this);
         clientsThread.start();
         logger.info("The server is now up on localhost:" + port);
     }
 
+    /**
+     * Stops the server.
+     */
     public void stop() {
         stopping = true;
         sendMessage("Stopping server...");
 
-        try {
-            sendToAllClients(new DisconnectPlayerPacket("Server closed"));
-        } catch (StringToBigToConvertException ignored) {}
+        sendToAllClients(new DisconnectPlayerPacket("Server closed"));
 
         try {
             clientsThread.incomingSocket.close();
         } catch (IOException ignored) {}
     }
 
-    public void addPlayer(NPC npc, String joinMessage, boolean silent) throws StringToBigToConvertException,
-            ClientDisconnectedException {
+    /**
+     * Adds a NPC to the server.
+     *
+     * @param npc the npc to add.
+     * @param joinMessage the join message.
+     * @param silent true when the join message must not be send.
+     * @throws ClientDisconnectedException when the npc disconnected.
+     */
+    public void addPlayer(NPC npc, String joinMessage, boolean silent) throws ClientDisconnectedException {
 
         if (npc instanceof Player) {
             Player p = (Player) npc;
@@ -212,6 +289,13 @@ public class Server {
         onlinePlayers.add(npc);
     }
 
+    /**
+     * Sets a block on the server.
+     * When the server is online, use this instead of {@link ServerLevel#setBlock(BlockPosition, Block)}.
+     *
+     * @param position the position to set the block at.
+     * @param block the new block.
+     */
     public void setBlock(BlockPosition position, Block block) {
         ServerSetBlockPacket setBlockPacket = new ServerSetBlockPacket(
                 position,
@@ -222,17 +306,27 @@ public class Server {
         sendToAllClients(setBlockPacket);
     }
 
+    /**
+     * Removes a NPC from the server.
+     *
+     * @param npc the NPC to remove.
+     * @param reason the reason the NPC left.
+     * @param silent true when the reason must not be send.
+     */
     public void removePlayer(NPC npc, String reason, boolean silent) {
         onlinePlayers.remove(npc);
         sendToAllClients(new DespawnPlayerPacket(npc));
         if (!silent) {
             logger.info(npc.getUsername() + " left: " + reason);
-            try {
-                sendToAllClients(new ServerMessagePacket(Config.generateLeaveMessage(npc, reason)));
-            } catch (StringToBigToConvertException ignored) {}
+            sendToAllClients(new ServerMessagePacket(Config.generateLeaveMessage(npc, reason)));
         }
     }
 
+    /**
+     * Sends a message to all online players.
+     *
+     * @param message the message to send.
+     */
     public void sendMessage(String message) {
         try {
             for (NPC player : onlinePlayers) {
@@ -246,6 +340,11 @@ public class Server {
         logger.info(message);
     }
 
+    /**
+     * Sends a packet to the server.
+     *
+     * @param packet the packet to send.
+     */
     public void sendToAllClients(ServerBoundPacket packet) {
         try {
             for (NPC p : onlinePlayers) {
@@ -262,6 +361,9 @@ public class Server {
         } catch (ConcurrentModificationException ignored) {}
     }
 
+    /**
+     * Ticks the server. Should be executed 40 times in a second (every 25 milliseconds).
+     */
     public void tick() {
         try {
             for (NPC player : onlinePlayers) {
@@ -283,6 +385,9 @@ public class Server {
         }
     }
 
+    /**
+     * Used to call events for extensions.
+     */
     static class ExtensionEventCaller implements EventHandler {
 
         @Override

@@ -5,6 +5,9 @@ import io.github.nan8279.smcs.level.blocks.Block;
 
 import java.util.Random;
 
+/**
+ * Flat overworld terrain generator.
+ */
 public class FlatOverworld extends FlatWorld {
 
     @Override

@@ -8,12 +8,24 @@ import io.github.nan8279.smcs.position.BlockPosition;
 import java.util.HashMap;
 import java.util.Random;
 
+/**
+ * Flower field structure.
+ */
 public class FlowerField extends StructureGenerator {
 
     public FlowerField(HashMap<BlockPosition, Block> blocksToGenerate) {
         super(blocksToGenerate);
     }
 
+    /**
+     * Generates a flower field at a random position.
+     *
+     * @param random the random number generator.
+     * @param flower the flower to use.
+     * @param level the level to generate the flower field in.
+     * @param centerPos the center position of the flower field.
+     * @return the flower field structure.
+     */
     public static FlowerField generateFlowerField(Random random, Block flower,
                                                   ServerLevel level, BlockPosition centerPos) {
         HashMap<BlockPosition, Block> blocksToGenerate = new HashMap<>();

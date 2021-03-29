@@ -1,6 +1,8 @@
 package io.github.nan8279.smcs.position;
 
-
+/**
+ * Used to store a player position.
+ */
 public class PlayerPosition {
     final private double posX;
     final private double posY;

@@ -5,6 +5,9 @@ import io.github.nan8279.smcs.position.BlockPosition;
 
 import java.util.HashMap;
 
+/**
+ * Tree structure.
+ */
 public class Tree extends StructureGenerator {
     final private static HashMap<BlockPosition, Block> tree = new HashMap<>();
 
