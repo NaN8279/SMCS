@@ -11,7 +11,8 @@ public enum Extension {
     HELD_BLOCK(new HeldBlockExtension()),
     TWO_WAY_PING(new TwoWayPingExtension()),
     ENV_COLORS(new EnvColorsExtension()),
-    BULK_BLOCK_UPDATE(new BulkBlockUpdateExtension());
+    BULK_BLOCK_UPDATE(new BulkBlockUpdateExtension()),
+    ENV_WEATHER_TYPE(new EnvWeatherTypeExtension());
 
     final private AbstractExtension extension;
     Extension(AbstractExtension extension) {

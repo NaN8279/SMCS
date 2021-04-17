@@ -38,7 +38,7 @@ public class ServerPositionPacket implements ServerBoundPacket {
 
         packet.addShort((short) (playerPosition.getPosX() * 32));
         packet.addShort((short) (playerPosition.getPosY() * 32 + 51));
-        packet.addShort((short) (playerPosition.getPosX() * 32));
+        packet.addShort((short) (playerPosition.getPosZ() * 32));
 
         packet.addByte(playerPosition.getYaw());
         packet.addByte(playerPosition.getPitch());
